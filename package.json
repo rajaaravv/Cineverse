@@ -1,8 +1,11 @@
 {
-  "name": "streamhub",
+  "name": "cineverse",
   "version": "1.0.0",
   "private": true,
-  "description": "StreamHub IPTV Playlist Management Platform & Web Player",
+  "description": "Cineverse IPTV Playlist Management Platform & Web Player",
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
     "dev": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",

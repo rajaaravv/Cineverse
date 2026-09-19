@@ -97,6 +97,7 @@ Cineverse/
 ├── docker-compose.yml            # Multi-container Docker deployment
 ├── run-backend.ps1               # Quick-start script for Backend
 └── run-frontend.ps1              # Quick-start script for Frontend
+<<<<<<< HEAD
 ```
 
 ---
@@ -218,3 +219,5 @@ docker-compose down
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE) — free for personal, educational, and commercial use.
+=======
+>>>>>>> d446e8d4ac37815b67b5e413d04a31ae1611cc22
