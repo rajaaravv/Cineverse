@@ -16,22 +16,13 @@ export const favoriteApi = {
     }
 
     const saved = localStorage.getItem(LOCAL_FAVS_KEY);
-    if (saved) return JSON.parse(saved);
-
-    // Initial demo favorites
-    const initialFavs: Favorite[] = FALLBACK_CHANNELS.filter((c) => c.favorite).map((c) => ({
-      id: c.id,
-      channelId: c.id,
-      channelName: c.name,
-      tvgLogo: c.tvgLogo,
-      groupTitle: c.groupTitle,
-      streamUrl: c.streamUrl,
-      playlistId: c.playlistId,
-      playlistName: c.playlistName,
-      createdAt: '2026-09-10T00:00:00',
-    }));
-    localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(initialFavs));
-    return initialFavs;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+    }
+    return [];
   },
 
   add: async (channelId: number): Promise<Favorite> => {

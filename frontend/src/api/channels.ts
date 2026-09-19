@@ -10,155 +10,18 @@ export interface ChannelFilterParams {
   sortDir?: string;
 }
 
-export const FALLBACK_CHANNELS: Channel[] = [
-  {
-    id: 1,
-    playlistId: 1,
-    playlistName: 'Curated Cinema & News',
-    name: 'Scream VII - The Horror Movie Channel',
-    tvgId: 'Scream7.us',
-    tvgName: 'Scream 7 Live',
-    tvgLogo: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
-    groupTitle: 'Movies',
-    streamUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-    status: 'ACTIVE',
-    favorite: true,
-  },
-  {
-    id: 2,
-    playlistId: 1,
-    playlistName: 'Curated Cinema & News',
-    name: 'Red Bull Extreme Sports HD',
-    tvgId: 'RedBullTV.at',
-    tvgName: 'Red Bull TV',
-    tvgLogo: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=600&auto=format&fit=crop&q=80',
-    groupTitle: 'Sports',
-    streamUrl: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8',
-    status: 'ACTIVE',
-    favorite: true,
-  },
-  {
-    id: 3,
-    playlistId: 1,
-    playlistName: 'Curated Cinema & News',
-    name: 'Bloomberg TV Global Markets',
-    tvgId: 'Bloomberg.us',
-    tvgName: 'Bloomberg TV',
-    tvgLogo: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&auto=format&fit=crop&q=80',
-    groupTitle: 'News',
-    streamUrl: 'https://bloomberg-p2p.live.amagi.tv/hls/amagi_hls_data_bloomberg-p2p-samsungin/CDN/playlist.m3u8',
-    status: 'ACTIVE',
-    favorite: false,
-  },
-  {
-    id: 4,
-    playlistId: 1,
-    playlistName: 'Curated Cinema & News',
-    name: 'France 24 International Live',
-    tvgId: 'France24.fr',
-    tvgName: 'France 24 English',
-    tvgLogo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/France_24_logo.svg/512px-France_24_logo.svg.png',
-    groupTitle: 'News',
-    streamUrl: 'https://static.france24.com/live/F24_EN_LO_HLS/live_web.m3u8',
-    status: 'ACTIVE',
-    favorite: false,
-  },
-  {
-    id: 5,
-    playlistId: 1,
-    playlistName: 'Curated Cinema & News',
-    name: 'DW World News English',
-    tvgId: 'DW.de',
-    tvgName: 'DW English',
-    tvgLogo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Deutsche_Welle_symbol_2012.svg/512px-Deutsche_Welle_symbol_2012.svg.png',
-    groupTitle: 'News',
-    streamUrl: 'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8',
-    status: 'ACTIVE',
-    favorite: true,
-  },
-  {
-    id: 6,
-    playlistId: 1,
-    playlistName: 'Curated Cinema & News',
-    name: 'NASA TV Earth & Universe 4K',
-    tvgId: 'NASA.us',
-    tvgName: 'NASA TV Public',
-    tvgLogo: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80',
-    groupTitle: 'TV Shows',
-    streamUrl: 'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8',
-    status: 'ACTIVE',
-    favorite: true,
-  },
-  {
-    id: 7,
-    playlistId: 1,
-    playlistName: 'Curated Cinema & News',
-    name: 'Tastemade Food & Travel 24/7',
-    tvgId: 'Tastemade.us',
-    tvgName: 'Tastemade',
-    tvgLogo: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=80',
-    groupTitle: 'Reality',
-    streamUrl: 'https://tastemade-samsungus.amagi.tv/playlist.m3u8',
-    status: 'ACTIVE',
-    favorite: false,
-  },
-  {
-    id: 8,
-    playlistId: 1,
-    playlistName: 'Curated Cinema & News',
-    name: 'Sintel Animated Fantasy Feature',
-    tvgId: 'Sintel.org',
-    tvgName: 'Sintel Stream',
-    tvgLogo: 'https://bitdash-a.akamaihd.net/content/sintel/poster.png',
-    groupTitle: 'Movies',
-    streamUrl: 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8',
-    status: 'ACTIVE',
-    favorite: true,
-  },
-  {
-    id: 9,
-    playlistId: 1,
-    playlistName: 'Curated Cinema & News',
-    name: 'Euronews 24/7 Live Feed',
-    tvgId: 'Euronews.fr',
-    tvgName: 'Euronews English',
-    tvgLogo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Euronews_logo_2016.svg/512px-Euronews_logo_2016.svg.png',
-    groupTitle: 'News',
-    streamUrl: 'https://euronews-euronews-world-1-au.samsung.wurl.tv/playlist.m3u8',
-    status: 'ACTIVE',
-    favorite: false,
-  },
-  {
-    id: 10,
-    playlistId: 1,
-    playlistName: 'Curated Cinema & News',
-    name: 'Predator Badlands Live Series',
-    tvgId: 'Predator.us',
-    tvgName: 'Predator Stream',
-    tvgLogo: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-    groupTitle: 'TV Shows',
-    streamUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-    status: 'ACTIVE',
-    favorite: false,
-  },
-];
+export const FALLBACK_CHANNELS: Channel[] = [];
 
-export const FALLBACK_CATEGORIES: Category[] = [
-  { name: 'Movies', channelCount: 4 },
-  { name: 'Sports', channelCount: 3 },
-  { name: 'TV Shows', channelCount: 5 },
-  { name: 'News', channelCount: 6 },
-  { name: 'Reality', channelCount: 2 },
-];
+export const FALLBACK_CATEGORIES: Category[] = [];
 
 function getAllLocalChannels(): Channel[] {
   try {
     const custom = JSON.parse(localStorage.getItem('cineverse_custom_channels') || '[]');
-    if (Array.isArray(custom) && custom.length > 0) {
-      return [...custom, ...FALLBACK_CHANNELS];
+    if (Array.isArray(custom)) {
+      return custom;
     }
   } catch (e) {}
-  return FALLBACK_CHANNELS;
+  return [];
 }
 
 export const channelApi = {

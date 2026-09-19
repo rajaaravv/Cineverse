@@ -14,7 +14,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
   onClose,
   onPlaylistAdded,
 }) => {
-  const [activeTab, setActiveTab] = useState<'URL' | 'FILE' | 'TEXT' | 'DEMO'>('URL');
+  const [activeTab, setActiveTab] = useState<'URL' | 'FILE' | 'TEXT'>('URL');
   const [name, setName] = useState<string>('');
   const [url, setUrl] = useState<string>('');
   const [rawText, setRawText] = useState<string>('');
@@ -54,16 +54,10 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
           name: name.trim(),
           content: rawText.trim(),
         });
-      } else if (activeTab === 'FILE') {
+      } else {
         if (!file) throw new Error('Please select an M3U file to upload');
 
         createdPlaylist = await playlistApi.uploadFile(name.trim() || file.name, file);
-      } else {
-        // DEMO TAB
-        createdPlaylist = await playlistApi.createFromUrlOrText({
-          name: name.trim() || 'Cineverse Premier Feeds',
-          url: 'https://cineverse.tv/feed/curated.m3u',
-        });
       }
 
       onPlaylistAdded(createdPlaylist);
@@ -87,7 +81,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
         <div className="flex items-center justify-between pb-4 border-b border-border">
           <div>
             <h2 className="text-base font-bold text-card-foreground">Import M3U Playlist</h2>
-            <p className="text-xs text-muted-foreground">Add channels from your IPTV provider or M3U link</p>
+            <p className="text-xs text-muted-foreground">Add channels from your IPTV provider, M3U URL or file</p>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground bg-secondary border border-border">
             <X className="h-4 w-4" />
@@ -95,46 +89,36 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
         </div>
 
         {/* Tab Selection */}
-        <div className="mt-5 grid grid-cols-4 gap-1 rounded-lg bg-muted p-1 border border-border">
+        <div className="mt-5 grid grid-cols-3 gap-1 rounded-lg bg-muted p-1 border border-border">
           <button
             type="button"
             onClick={() => setActiveTab('URL')}
-            className={`flex items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-semibold transition-all ${
               activeTab === 'URL' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Globe className="h-3.5 w-3.5" />
-            <span>URL</span>
+            <span>M3U URL</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('TEXT')}
-            className={`flex items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-semibold transition-all ${
               activeTab === 'TEXT' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <FileText className="h-3.5 w-3.5" />
-            <span>Paste</span>
+            <span>Paste M3U</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('FILE')}
-            className={`flex items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-semibold transition-all ${
               activeTab === 'FILE' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Upload className="h-3.5 w-3.5" />
-            <span>File</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('DEMO')}
-            className={`flex items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition-all ${
-              activeTab === 'DEMO' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Curated</span>
+            <span>File Upload</span>
           </button>
         </div>
 

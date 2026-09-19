@@ -21,8 +21,8 @@ const DEMO_USER: User = {
   email: 'austin@cineverse.tv',
   role: 'ROLE_USER',
   createdAt: '2026-09-10T00:00:00',
-  playlistCount: 2,
-  favoriteCount: 5,
+  playlistCount: 0,
+  favoriteCount: 0,
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

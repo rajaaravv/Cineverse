@@ -26,8 +26,8 @@ export const userApi = {
       email: 'austin@cineverse.tv',
       role: 'ROLE_USER',
       createdAt: new Date().toISOString(),
-      playlistCount: 2,
-      favoriteCount: 4,
+      playlistCount: 0,
+      favoriteCount: 0,
     };
     return defaultUser;
   },
