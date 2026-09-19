@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --card: oklch(1.00 0 0);
+  --ring: oklch(0 0 0);
+  --input: oklch(0.94 0 0);
+  --muted: oklch(0.97 0 0);
+  --accent: oklch(0.94 0 0);
+  --border: oklch(0.92 0 0);
+  --radius: 0.5rem;
+  --chart-1: oklch(0.81 0.17 75.35);
+  --chart-2: oklch(0.55 0.22 264.53);
+  --chart-3: oklch(0.72 0 0);
+  --chart-4: oklch(0.92 0 0);
+  --chart-5: oklch(0.56 0 0);
+  --popover: oklch(0.99 0 0);
+  --primary: oklch(0 0 0);
+  --sidebar: oklch(0.99 0 0);
+  --font-mono: 'Geist Mono', monospace;
+  --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --secondary: oklch(0.94 0 0);
+  --background: oklch(0.99 0 0);
+  --font-serif: Georgia, serif;
+  --foreground: oklch(0 0 0);
+  --destructive: oklch(0.63 0.19 23.03);
+  --shadow-blur: 2px;
+  --shadow-color: hsl(0 0% 0%);
+  --sidebar-ring: oklch(0 0 0);
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.18;
+  --sidebar-accent: oklch(0.94 0 0);
+  --sidebar-border: oklch(0.94 0 0);
+  --card-foreground: oklch(0 0 0);
+  --shadow-offset-x: 0px;
+  --shadow-offset-y: 1px;
+  --sidebar-primary: oklch(0 0 0);
+  --muted-foreground: oklch(0.44 0 0);
+  --accent-foreground: oklch(0 0 0);
+  --popover-foreground: oklch(0 0 0);
+  --primary-foreground: oklch(1.00 0 0);
+  --sidebar-foreground: oklch(0 0 0);
+  --secondary-foreground: oklch(0 0 0);
+  --destructive-foreground: oklch(1.00 0 0);
+  --sidebar-accent-foreground: oklch(0 0 0);
+  --sidebar-primary-foreground: oklch(1.00 0 0);
+}
+
+.dark, body {
+  --card: oklch(0.14 0 0);
+  --ring: oklch(0.72 0 0);
+  --input: oklch(0.32 0 0);
+  --muted: oklch(0.23 0 0);
+  --accent: oklch(0.32 0 0);
+  --border: oklch(0.26 0 0);
+  --chart-1: oklch(0.81 0.17 75.35);
+  --chart-2: oklch(0.58 0.21 260.84);
+  --chart-3: oklch(0.56 0 0);
+  --chart-4: oklch(0.44 0 0);
+  --chart-5: oklch(0.92 0 0);
+  --popover: oklch(0.18 0 0);
+  --primary: oklch(1.00 0 0);
+  --sidebar: oklch(0.18 0 0);
+  --font-mono: 'Geist Mono', monospace;
+  --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --secondary: oklch(0.25 0 0);
+  --background: oklch(0 0 0);
+  --font-serif: Georgia, serif;
+  --foreground: oklch(1.00 0 0);
+  --destructive: oklch(0.69 0.20 23.91);
+  --sidebar-ring: oklch(0.72 0 0);
+  --sidebar-accent: oklch(0.32 0 0);
+  --sidebar-border: oklch(0.32 0 0);
+  --card-foreground: oklch(1.00 0 0);
+  --sidebar-primary: oklch(1.00 0 0);
+  --muted-foreground: oklch(0.72 0 0);
+  --accent-foreground: oklch(1.00 0 0);
+  --popover-foreground: oklch(1.00 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --sidebar-foreground: oklch(1.00 0 0);
+  --secondary-foreground: oklch(1.00 0 0);
+  --destructive-foreground: oklch(0 0 0);
+  --sidebar-accent-foreground: oklch(1.00 0 0);
+  --sidebar-primary-foreground: oklch(0 0 0);
+}
+
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    @apply overflow-x-hidden antialiased min-h-screen relative selection:bg-primary selection:text-primary-foreground;
+  }
+}
+
+/* Custom sleek Vercel monochrome scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Hide scrollbars for horizontal carousels while keeping scrollability */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Vercel Minimalist Surfaces & Glass Panels */
+.glass-panel {
+  background: var(--card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+}
+
+.glass-dock {
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--border);
+}
+
+.glass-pill {
+  background: var(--secondary);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  transition: all 0.15s ease-out;
+}
+
+.glass-pill:hover {
+  background: var(--accent);
+  border-color: var(--border);
+}
+
+/* Aesthetic Vercel Card Lift */
+.aesthetic-card, .glass-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.aesthetic-card:hover, .glass-card:hover {
+  background: var(--accent);
+  border-color: var(--border);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Subtle Vercel focus ring */
+.focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--background), 0 0 0 2px var(--ring);
+}
+

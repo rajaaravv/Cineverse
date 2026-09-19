@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: streamhub-db
+    environment:
+      POSTGRES_DB: streamhub
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: streamhubpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d streamhub"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - streamhub-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: streamhub-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/streamhub
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: streamhubpassword
+      STREAMHUB_JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - streamhub-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: streamhub-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - streamhub-network
+
+volumes:
+  postgres_data:
+
+networks:
+  streamhub-network:
+    driver: bridge
