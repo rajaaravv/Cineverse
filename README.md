@@ -1,130 +1,99 @@
-# StreamHub - Modern IPTV Playlist Manager & Live Web Player
+<div align="center">
 
-StreamHub is a full-stack IPTV web application that allows users to import M3U playlists, browse channels by category, search live streams, organize favorites, track watch history, and stream live TV directly in the browser using [Hls.js](https://github.com/video-dev/hls.js).
+# 🎬 CINEVERSE
 
----
+### **Modern IPTV Playlist Manager & Low-Latency Live Web Streaming Platform**
 
-## Architecture & Tech Stack
+[![GitHub](https://img.shields.io/badge/GitHub-rajaaravv-181717?style=flat-square&logo=github)](https://github.com/rajaaravv)
+[![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3.4-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Design System](https://img.shields.io/badge/Design_Theme-Vercel_Monochrome_Geist-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com/font)
+[![HLS.js](https://img.shields.io/badge/HLS.js-Live_Streaming-FF6B6B?style=flat-square)](https://github.com/video-dev/hls.js)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-- **Frontend**:
-  - React 18 with TypeScript
-  - Vite for ultra-fast bundling and development
-  - Tailwind CSS for modern cinema dark UI
-  - HLS.js for live HTTP Live Streaming playback (HLS / MPEG-TS)
-  - Lucide React icons
-  - Axios with JWT token interceptors & React Router v6
-- **Backend**:
-  - Java 21 & Spring Boot 3.3.4
-  - Spring Security 6 & JJWT (HMAC-SHA256 Bearer tokens)
-  - Spring Data JPA & Hibernate
-  - High-throughput streaming M3U parser (URL & file uploads)
-  - Dual-profile configuration: PostgreSQL (prod) & H2 in-memory (dev)
-  - Springdoc OpenAPI (Swagger UI)
-- **Deployment**:
-  - Docker & Docker Compose
-  - Nginx reverse proxy
+<p align="center">
+  <b>Cineverse</b> is an ultra-fast, cloud-ready IPTV platform engineered with a decoupled <b>Java 21 Spring Boot 3.3</b> backend and a <b>React 18 + TypeScript</b> frontend styled in the <b>Vercel Monochrome (Geist)</b> design system.
+</p>
+
+[Key Features](#-key-features) • [Tech Stack](#-technology-stack) • [Quick Start](#-quick-start) • [Docker Deployment](#-docker-deployment) • [API Reference](#-api-endpoints) • [Author](#-author)
 
 ---
 
-## Core Features
+</div>
 
-1. **User Authentication & Profiles**:
-   - Secure registration, login, and profile updates (username & password changes).
-   - Password encryption with BCrypt.
-   - Built-in `demo` account (`demo` / `demo123`) for instant testing.
-2. **Playlist Management**:
-   - Import M3U via accessible HTTP/HTTPS URL or file upload (`.m3u` / `.m3u8`).
-   - One-click Curated Demo Channels button with pre-vetted, legal public IPTV streams (Bloomberg, France 24, DW, Red Bull TV, NASA TV, etc.).
-   - Rename playlists, refresh channels from the original URL, and delete playlists.
-3. **Channel Discovery & Browser**:
-   - Instant debounced search by channel name or category.
-   - Dynamic category pills with channel counts.
-   - Sort alphabetically (A-Z, Z-A).
-   - Pagination and channel logo fallback placeholders.
-4. **Live TV Player**:
-   - Real-time video player using HLS.js with live sync.
-   - Auto-reconnect with exponential backoff on stream interruptions.
-   - Volume slider & mute control.
-   - Channel switching drawer and next/previous channel buttons.
-   - Picture-in-Picture (PiP) and Fullscreen mode.
-   - Keyboard shortcuts (`Space`, `F`, `M`, `ArrowUp/Down`, `ArrowLeft/Right`, `Esc`).
-5. **Favorites & Watch History**:
-   - Pin favorite channels with a single click.
-   - Dedicated favorites page.
-   - Automatic watch history logging with "Resume Watching" action and clear history.
+## ✨ Key Features
+
+- **⚡ Low-Latency HLS Web Player (`hls.js`)**: Real-time HTTP Live Streaming engine supporting live streams and VOD with automatic reconnection, buffer recovery, volume controls, and picture-in-picture.
+- **🖤 Vercel Monochrome Design Theme**: Clean, minimal aesthetics using the **Geist** typeface, Geist Mono, 100% semantic CSS variable tokens (`oklch`), subtle borders, and zero hardcoded colors.
+- **📂 High-Throughput M3U / M3U8 Stream Parser**: Parses remote M3U URL feeds and uploaded `.m3u` files, extracting stream resolutions, `group-title`, `tvg-logo`, and channel metadata.
+- **🌟 Smart Spotlight Hero Banner**: Automatically detects and showcases your most recently watched channel or trending live streams with 1-click instant resume.
+- **🔍 Command Palette Search (`Ctrl + K` / `Cmd + K`)**: Fast global modal search across all imported channels and categories with keyboard shortcuts.
+- **⭐ Starred Favorites Shelf**: Pin channels to your personalized shelf for instant one-click streaming.
+- **⏱️ Watch History Tracking**: Automatic stream session logging with relative timestamps (`Just now`, `5m ago`) and full history management.
+- **🔐 Stateless JWT Authentication**: Secure BCrypt password hashing, token validation, user profile management, and a 1-click Instant Demo Sign-In.
 
 ---
 
-## Quick Start (Local Development)
+## 🛠️ Technology Stack
 
-### 1. Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
-The frontend will start at `http://localhost:5173`.
+### **Frontend**
+| Technology | Description |
+| :--- | :--- |
+| **React 18.3** | Component-driven UI architecture with custom hooks |
+| **TypeScript 5.5** | Strongly-typed models, API definitions, and compile-time safety |
+| **Vite 5.4** | Next-generation frontend build tooling and HMR dev server |
+| **Tailwind CSS 3.4** | Utility-first styling with shadcn/ui semantic design tokens |
+| **Geist & Geist Mono** | Modern typography for clean UI readability and tabular metrics |
+| **HLS.js** | JavaScript HLS client for HTML5 video playback |
+| **Lucide React** | Lightweight, consistent monochrome iconography |
+| **Axios** | Promise-based HTTP client with automatic JWT bearer interceptors |
 
-### 2. Backend Setup
-```bash
-cd backend
-mvn spring-boot:run
-```
-*(Or if using Maven wrapper: `./mvnw spring-boot:run`)*
-
-The backend will start at `http://localhost:8080`.
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI JSON: `http://localhost:8080/api-docs`
-- H2 Console (dev profile): `http://localhost:8080/h2-console`
-
----
-
-## Docker Deployment (Full Stack)
-
-To run the complete platform (PostgreSQL + Spring Boot + React/Nginx) with a single command:
-
-```bash
-docker-compose up -d --build
-```
-
-Access the application:
-- **StreamHub Web App**: `http://localhost:3000`
-- **Backend API**: `http://localhost:8080`
-- **PostgreSQL Database**: Port `5432`
+### **Backend**
+| Technology | Description |
+| :--- | :--- |
+| **Java 21** | Modern LTS Java runtime with virtual threads support |
+| **Spring Boot 3.3.4** | Enterprise REST API microservice framework |
+| **Spring Security 6** | Stateless authentication with custom filters |
+| **JJWT 0.12.6** | JSON Web Token (HMAC-SHA256) session management |
+| **Spring Data JPA & Hibernate** | Object-relational persistence layer |
+| **H2 & PostgreSQL** | Dual profile support: In-memory H2 (Dev) & PostgreSQL (Prod) |
+| **Springdoc OpenAPI (Swagger)** | Interactive API documentation (`/swagger-ui.html`) |
+| **Maven 3.9** | Dependency and lifecycle management |
 
 ---
 
-## API Reference
+## 📁 Repository Structure
 
-### Authentication
-- `POST /api/auth/register` - Create a new user account
-- `POST /api/auth/login` - Authenticate user and receive JWT token
-- `POST /api/auth/logout` - Invalidate session
-
-### User Profile
-- `GET /api/user/profile` - Get user details, playlist count, and favorite count
-- `PUT /api/user/profile` - Update username or password
-
-### Playlists
-- `GET /api/playlists` - List user's playlists
-- `POST /api/playlists` - Import playlist via URL or raw content
-- `POST /api/playlists/upload` - Upload M3U file
-- `PUT /api/playlists/{id}` - Rename playlist
-- `POST /api/playlists/{id}/refresh` - Refresh playlist from original URL
-- `DELETE /api/playlists/{id}` - Delete playlist
-
-### Channels
-- `GET /api/channels` - List channels with filters (`category`, `playlistId`, `page`, `size`)
-- `GET /api/channels/search` - Search channels (`query`, `category`, `playlistId`)
-- `GET /api/channels/{id}` - Get channel details
-- `GET /api/channels/categories` - List categories with channel counts
-
-### Favorites
-- `GET /api/favorites` - Get favorite channels
-- `POST /api/favorites/{channelId}` - Add to favorites
-- `DELETE /api/favorites/{channelId}` - Remove from favorites
-
-### Watch History
-- `GET /api/history` - Get recently played channels
-- `POST /api/history/{channelId}` - Record channel play event
-- `DELETE /api/history` - Clear watch history
+```text
+Cineverse/
+├── backend/                      # Java 21 / Spring Boot 3.3 API
+│   ├── src/main/java/com/streamhub/
+│   │   ├── config/               # Security, JWT, Swagger, Data Seeders
+│   │   ├── controller/           # REST Endpoints (Auth, Channels, Playlists, etc.)
+│   │   ├── dto/                  # Request / Response Data Transfer Objects
+│   │   ├── entity/               # JPA Entities (User, Channel, Playlist, History)
+│   │   ├── exception/            # Global Exception Handling
+│   │   ├── parser/               # High-speed M3U/M3U8 Streaming Parser
+│   │   ├── repository/           # Spring Data JPA Repositories
+│   │   └── service/              # Core Business Logic Services
+│   └── pom.xml                   # Maven Build Config
+│
+├── frontend/                     # React 18 / Vite / TypeScript App
+│   ├── src/
+│   │   ├── api/                  # Axios REST API Client Modules
+│   │   ├── components/           # UI Components (Player, Cards, Modals, Docks)
+│   │   ├── context/              # Global React Contexts (AuthContext, PlayerContext)
+│   │   ├── pages/                # Views (Home, Channels, Playlists, Favorites, Profile)
+│   │   ├── types/                # TypeScript Interfaces & Models
+│   │   └── index.css             # Vercel Monochrome CSS Variables (:root & .dark)
+│   ├── index.html                # HTML5 Shell with Geist Font CDN
+│   ├── tailwind.config.js        # Semantic Tailwind Configuration
+│   └── package.json              # Frontend Dependencies
+│
+├── sample-playlists/             # Pre-configured legal IPTV playlists for testing
+├── docker-compose.yml            # Multi-container Docker deployment
+├── run-backend.ps1               # Quick-start script for Backend
+└── run-frontend.ps1              # Quick-start script for Frontend
