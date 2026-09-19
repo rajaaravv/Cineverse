@@ -1,6 +1,6 @@
 import React from 'react';
 import { Category } from '../types';
-import { matchCategory } from '../api/channels';
+import { cleanCategory } from '../api/channels';
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -30,7 +30,10 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
       </button>
 
       {categories.map((cat) => {
-        const isSelected = Boolean(selectedCategory && matchCategory(selectedCategory, cat.name));
+        const isSelected = Boolean(
+          selectedCategory &&
+          (selectedCategory === cat.name || cleanCategory(selectedCategory) === cleanCategory(cat.name))
+        );
         return (
           <button
             key={cat.name}

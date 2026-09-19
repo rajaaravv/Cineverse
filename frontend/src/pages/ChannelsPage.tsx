@@ -22,7 +22,6 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
   onSelectPlaylist: externalSelectPlaylist,
 }) => {
   const [allChannels, setAllChannels] = useState<Channel[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [internalPlaylistId, setInternalPlaylistId] = useState<number | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -43,16 +42,14 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
 
   const { playChannel } = usePlayer();
 
-  // Load categories and metadata
+  // Load favorites and watch history
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const [catList, favList, histList] = await Promise.all([
-          channelApi.getCategories(activePlaylistId).catch(() => []),
+        const [favList, histList] = await Promise.all([
           favoriteApi.getAll().catch(() => []),
           historyApi.getAll(10).catch(() => []),
         ]);
-        if (Array.isArray(catList)) setCategories(catList);
         if (Array.isArray(favList)) setFavorites(favList);
         if (Array.isArray(histList)) setHistoryItems(histList);
       } catch (err) {
@@ -90,6 +87,19 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
   useEffect(() => {
     loadChannels();
   }, [loadChannels]);
+
+  // Derive categories dynamically from loaded channels so they 100% match!
+  const categories: Category[] = React.useMemo(() => {
+    const map = new Map<string, number>();
+    allChannels.forEach((c) => {
+      const raw = (c.groupTitle || 'General').trim();
+      const cat = raw || 'General';
+      map.set(cat, (map.get(cat) || 0) + 1);
+    });
+    return Array.from(map.entries())
+      .map(([name, channelCount]) => ({ name, channelCount }))
+      .sort((a, b) => b.channelCount - a.channelCount);
+  }, [allChannels]);
 
   // Instant reactive category filtering
   const safeChannels = React.useMemo(() => {

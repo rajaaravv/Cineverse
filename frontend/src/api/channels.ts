@@ -14,22 +14,54 @@ export const FALLBACK_CHANNELS: Channel[] = [];
 
 export const FALLBACK_CATEGORIES: Category[] = [];
 
-export function normalizeCategory(cat?: string | null): string {
-  if (!cat) return '';
-  return cat
-    .replace(/^["']|["']$/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
+export function cleanCategory(str?: string | null): string {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .replace(/["'“”‘’]/g, '')              // remove all quotes
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // remove zero-width chars
+    .replace(/[\r\n\t]/g, ' ')             // remove newlines/tabs
+    .replace(/\s*([+&/|-])\s*/g, '$1')     // normalize spaces around +, &, /, |, -
+    .replace(/\s+/g, ' ')                  // collapse whitespace
+    .trim();
 }
 
 export function matchCategory(channelGroup?: string | null, targetCategory?: string | null): boolean {
   if (!targetCategory || targetCategory.trim() === '') return true;
-  const target = normalizeCategory(targetCategory);
-  const group = normalizeCategory(channelGroup);
-  if (!target) return true;
-  if (!group) return target === 'general';
-  return group === target || group.includes(target) || target.includes(group);
+
+  const targetRaw = (targetCategory || '').trim();
+  const groupRaw = (channelGroup || '').trim();
+
+  // 1. Exact raw match
+  if (groupRaw === targetRaw || groupRaw.toLowerCase() === targetRaw.toLowerCase()) {
+    return true;
+  }
+
+  const targetClean = cleanCategory(targetCategory);
+  const groupClean = cleanCategory(channelGroup);
+
+  if (!targetClean) return true;
+  if (!groupClean) return targetClean === 'general';
+
+  // 2. Cleaned match
+  if (groupClean === targetClean) {
+    return true;
+  }
+
+  // 3. Multi-category token split (e.g. "Kids; Cartoons" or "Movies / Hindi")
+  const subGroups = (channelGroup || '').split(/[;,|/]/).map(cleanCategory).filter(Boolean);
+  if (subGroups.includes(targetClean)) {
+    return true;
+  }
+
+  // 4. Word boundary / substring inclusion
+  if (groupClean.length >= 3 && targetClean.length >= 3) {
+    if (groupClean.includes(targetClean) || targetClean.includes(groupClean)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function getAllLocalChannels(): Channel[] {
@@ -50,41 +82,82 @@ function getAllLocalChannels(): Channel[] {
 
 export const channelApi = {
   getChannels: async (params: ChannelFilterParams = {}): Promise<PageResponse<Channel>> => {
+    // If local channels exist in localStorage, use them immediately for 0ms response
+    const local = getAllLocalChannels();
+    if (local.length > 0) {
+      let filtered = local;
+      if (params.playlistId !== undefined && params.playlistId !== null) {
+        const byPl = local.filter((c) => Number(c.playlistId) === Number(params.playlistId));
+        if (byPl.length > 0) filtered = byPl;
+      }
+      if (params.category && params.category.trim() !== '') {
+        filtered = filtered.filter((c) => matchCategory(c.groupTitle, params.category));
+      }
+      return {
+        content: filtered,
+        totalElements: filtered.length,
+        totalPages: 1,
+        size: filtered.length || 48,
+        number: 0,
+        first: true,
+        last: true,
+        empty: filtered.length === 0,
+      };
+    }
+
     try {
       const res = await client.get<ApiResponse<PageResponse<Channel>>>('/channels', { params });
       if (res.data?.data?.content && res.data.data.content.length > 0) {
         return res.data.data;
       }
     } catch (err) {
-      // Backend not reached, proceed with local channels
-    }
-
-    let all = getAllLocalChannels();
-
-    if (params.playlistId !== undefined && params.playlistId !== null) {
-      const filteredByPlaylist = all.filter((c) => Number(c.playlistId) === Number(params.playlistId));
-      if (filteredByPlaylist.length > 0) {
-        all = filteredByPlaylist;
-      }
-    }
-
-    if (params.category && params.category.trim() !== '') {
-      all = all.filter((c) => matchCategory(c.groupTitle, params.category));
+      // Backend not reached
     }
 
     return {
-      content: all,
-      totalElements: all.length,
+      content: [],
+      totalElements: 0,
       totalPages: 1,
-      size: all.length || 48,
+      size: 48,
       number: 0,
       first: true,
       last: true,
-      empty: all.length === 0,
+      empty: true,
     };
   },
 
   searchChannels: async (query: string, params: ChannelFilterParams = {}): Promise<PageResponse<Channel>> => {
+    const q = (query || '').trim().toLowerCase();
+    const local = getAllLocalChannels();
+
+    if (local.length > 0) {
+      let filtered = local;
+      if (params.playlistId !== undefined && params.playlistId !== null) {
+        const byPl = local.filter((c) => Number(c.playlistId) === Number(params.playlistId));
+        if (byPl.length > 0) filtered = byPl;
+      }
+      if (q) {
+        filtered = filtered.filter((c) => {
+          const name = (c.name || '').toLowerCase();
+          const cat = (c.groupTitle || '').toLowerCase();
+          return name.includes(q) || cat.includes(q);
+        });
+      }
+      if (params.category && params.category.trim() !== '') {
+        filtered = filtered.filter((c) => matchCategory(c.groupTitle, params.category));
+      }
+      return {
+        content: filtered,
+        totalElements: filtered.length,
+        totalPages: 1,
+        size: filtered.length || 24,
+        number: 0,
+        first: true,
+        last: true,
+        empty: filtered.length === 0,
+      };
+    }
+
     try {
       const res = await client.get<ApiResponse<PageResponse<Channel>>>('/channels/search', {
         params: { ...params, query },
@@ -92,55 +165,55 @@ export const channelApi = {
       if (res.data?.data) {
         return res.data.data;
       }
-    } catch (err) {
-      // Backend not reached, proceed with local search
-    }
-
-    const q = (query || '').trim().toLowerCase();
-    let all = getAllLocalChannels();
-
-    if (params.playlistId !== undefined && params.playlistId !== null) {
-      const filteredByPlaylist = all.filter((c) => Number(c.playlistId) === Number(params.playlistId));
-      if (filteredByPlaylist.length > 0) {
-        all = filteredByPlaylist;
-      }
-    }
-
-    let filtered = all.filter((c) => {
-      const name = (c.name || '').toLowerCase();
-      const cat = (c.groupTitle || '').toLowerCase();
-      return name.includes(q) || cat.includes(q);
-    });
-
-    if (params.category && params.category.trim() !== '') {
-      filtered = filtered.filter((c) => matchCategory(c.groupTitle, params.category));
-    }
+    } catch (err) {}
 
     return {
-      content: filtered,
-      totalElements: filtered.length,
+      content: [],
+      totalElements: 0,
       totalPages: 1,
-      size: filtered.length || 24,
+      size: 24,
       number: 0,
       first: true,
       last: true,
-      empty: filtered.length === 0,
+      empty: true,
     };
   },
 
   getById: async (id: number): Promise<Channel> => {
+    const all = getAllLocalChannels();
+    const found = all.find((c) => Number(c.id) === Number(id));
+    if (found) return found;
+
     try {
       const res = await client.get<ApiResponse<Channel>>(`/channels/${id}`);
       if (res.data?.data) return res.data.data;
     } catch (err) {}
 
-    const all = getAllLocalChannels();
-    const found = all.find((c) => Number(c.id) === Number(id));
-    if (found) return found;
     return FALLBACK_CHANNELS[0];
   },
 
   getCategories: async (playlistId?: number): Promise<Category[]> => {
+    const all = getAllLocalChannels();
+    if (all.length > 0) {
+      let targetChannels = all;
+      if (playlistId !== undefined && playlistId !== null) {
+        const filtered = all.filter((c) => Number(c.playlistId) === Number(playlistId));
+        if (filtered.length > 0) targetChannels = filtered;
+      }
+      const catMap = new Map<string, number>();
+
+      targetChannels.forEach((c) => {
+        const cat = (c.groupTitle || 'General').trim();
+        if (cat) {
+          catMap.set(cat, (catMap.get(cat) || 0) + 1);
+        }
+      });
+
+      return Array.from(catMap.entries())
+        .map(([name, channelCount]) => ({ name, channelCount }))
+        .sort((a, b) => b.channelCount - a.channelCount);
+    }
+
     try {
       const res = await client.get<ApiResponse<Category[]>>('/channels/categories', {
         params: playlistId !== undefined && playlistId !== null ? { playlistId } : {},
@@ -150,28 +223,6 @@ export const channelApi = {
       }
     } catch (err) {}
 
-    const all = getAllLocalChannels();
-    let targetChannels = all;
-    if (playlistId !== undefined && playlistId !== null) {
-      const filtered = all.filter((c) => Number(c.playlistId) === Number(playlistId));
-      if (filtered.length > 0) {
-        targetChannels = filtered;
-      }
-    }
-    const catMap = new Map<string, number>();
-
-    targetChannels.forEach((c) => {
-      const cat = (c.groupTitle || 'General').trim();
-      if (cat) {
-        catMap.set(cat, (catMap.get(cat) || 0) + 1);
-      }
-    });
-
-    if (catMap.size === 0) return FALLBACK_CATEGORIES;
-
-    return Array.from(catMap.entries()).map(([name, channelCount]) => ({
-      name,
-      channelCount,
-    }));
+    return FALLBACK_CATEGORIES;
   },
 };
