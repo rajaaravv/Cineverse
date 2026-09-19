@@ -21,7 +21,7 @@ export function cleanCategory(str?: string | null): string {
     .replace(/["'“”‘’]/g, '')              // remove all quotes
     .replace(/[\u200B-\u200D\uFEFF]/g, '') // remove zero-width chars
     .replace(/[\r\n\t]/g, ' ')             // remove newlines/tabs
-    .replace(/\s*([+&/|-])\s*/g, '$1')     // normalize spaces around +, &, /, |, -
+    .replace(/\s*([+&|-])\s*/g, '$1')      // normalize spaces around +, &, |, - (leave slashes intact for e.g. 24/7)
     .replace(/\s+/g, ' ')                  // collapse whitespace
     .trim();
 }
@@ -29,11 +29,16 @@ export function cleanCategory(str?: string | null): string {
 export function matchCategory(channelGroup?: string | null, targetCategory?: string | null): boolean {
   if (!targetCategory || targetCategory.trim() === '') return true;
 
-  const targetRaw = (targetCategory || '').trim();
-  const groupRaw = (channelGroup || '').trim();
+  const targetRaw = (targetCategory || '').replace(/^["']|["']$/g, '').trim();
+  const groupRaw = (channelGroup || '').replace(/^["']|["']$/g, '').trim();
 
-  // 1. Exact raw match
-  if (groupRaw === targetRaw || groupRaw.toLowerCase() === targetRaw.toLowerCase()) {
+  // 1. Direct exact match (case-insensitive)
+  if (groupRaw.toLowerCase() === targetRaw.toLowerCase()) {
+    return true;
+  }
+
+  // 2. Default fallback for General
+  if (!groupRaw && targetRaw.toLowerCase() === 'general') {
     return true;
   }
 
@@ -43,20 +48,15 @@ export function matchCategory(channelGroup?: string | null, targetCategory?: str
   if (!targetClean) return true;
   if (!groupClean) return targetClean === 'general';
 
-  // 2. Cleaned match
+  // 3. Cleaned match (normalized whitespace, quotes, casing, symbols)
   if (groupClean === targetClean) {
     return true;
   }
 
-  // 3. Multi-category token split (e.g. "Kids; Cartoons" or "Movies / Hindi")
-  const subGroups = (channelGroup || '').split(/[;,|/]/).map(cleanCategory).filter(Boolean);
-  if (subGroups.includes(targetClean)) {
-    return true;
-  }
-
-  // 4. Word boundary / substring inclusion
-  if (groupClean.length >= 3 && targetClean.length >= 3) {
-    if (groupClean.includes(targetClean) || targetClean.includes(groupClean)) {
+  // 4. Semicolon or comma-separated multi-category tags (e.g. "News; Live" or "Movies, Action")
+  if (channelGroup && (channelGroup.includes(';') || channelGroup.includes(','))) {
+    const subGroups = channelGroup.split(/[;,]/).map((s) => cleanCategory(s)).filter(Boolean);
+    if (subGroups.includes(targetClean)) {
       return true;
     }
   }

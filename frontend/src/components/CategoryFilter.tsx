@@ -32,7 +32,8 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
       {categories.map((cat) => {
         const isSelected = Boolean(
           selectedCategory &&
-          (selectedCategory === cat.name || cleanCategory(selectedCategory) === cleanCategory(cat.name))
+          (selectedCategory.toLowerCase() === cat.name.toLowerCase() ||
+           cleanCategory(selectedCategory) === cleanCategory(cat.name))
         );
         return (
           <button

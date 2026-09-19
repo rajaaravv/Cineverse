@@ -92,7 +92,7 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
   const categories: Category[] = React.useMemo(() => {
     const map = new Map<string, number>();
     allChannels.forEach((c) => {
-      const raw = (c.groupTitle || 'General').trim();
+      const raw = (c.groupTitle || 'General').replace(/^["']|["']$/g, '').trim();
       const cat = raw || 'General';
       map.set(cat, (map.get(cat) || 0) + 1);
     });
@@ -294,21 +294,32 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card py-16 px-6 text-center">
             <h3 className="text-base font-semibold text-foreground">No channels found</h3>
             <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-              Try choosing another category, switching playlists, or import an M3U playlist.
+              {selectedCategory
+                ? `No channels found matching "${selectedCategory}".`
+                : 'Try choosing another category, switching playlists, or import an M3U playlist.'}
             </p>
-            <button
-              onClick={onOpenAddPlaylist}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Import Playlist</span>
-            </button>
+            {selectedCategory ? (
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-secondary border border-border px-4 py-2 text-xs font-semibold text-foreground hover:bg-accent transition"
+              >
+                <span>View All Channels</span>
+              </button>
+            ) : (
+              <button
+                onClick={onOpenAddPlaylist}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Import Playlist</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {safeChannels.map((channel) => (
+            {safeChannels.map((channel, index) => (
               <ChannelCard
-                key={channel.id}
+                key={`${channel.id}-${index}`}
                 channel={channel}
                 queueContext={safeChannels}
               />
