@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { channelApi } from '../api/channels';
+import { channelApi, matchCategory } from '../api/channels';
 import { playlistApi } from '../api/playlists';
 import { favoriteApi } from '../api/favorites';
 import { historyApi } from '../api/history';
@@ -94,8 +94,7 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
   // Instant reactive category filtering
   const safeChannels = React.useMemo(() => {
     if (!selectedCategory) return allChannels;
-    const target = selectedCategory.trim().toLowerCase();
-    return allChannels.filter((c) => (c.groupTitle || 'General').trim().toLowerCase() === target);
+    return allChannels.filter((c) => matchCategory(c.groupTitle, selectedCategory));
   }, [allChannels, selectedCategory]);
 
   const safeHistory = Array.isArray(historyItems) ? historyItems : [];

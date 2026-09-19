@@ -14,6 +14,24 @@ export const FALLBACK_CHANNELS: Channel[] = [];
 
 export const FALLBACK_CATEGORIES: Category[] = [];
 
+export function normalizeCategory(cat?: string | null): string {
+  if (!cat) return '';
+  return cat
+    .replace(/^["']|["']$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+export function matchCategory(channelGroup?: string | null, targetCategory?: string | null): boolean {
+  if (!targetCategory || targetCategory.trim() === '') return true;
+  const target = normalizeCategory(targetCategory);
+  const group = normalizeCategory(channelGroup);
+  if (!target) return true;
+  if (!group) return target === 'general';
+  return group === target || group.includes(target) || target.includes(group);
+}
+
 function getAllLocalChannels(): Channel[] {
   try {
     const custom = JSON.parse(localStorage.getItem('cineverse_custom_channels') || '[]');
@@ -44,15 +62,14 @@ export const channelApi = {
     let all = getAllLocalChannels();
 
     if (params.playlistId !== undefined && params.playlistId !== null) {
-      all = all.filter((c) => Number(c.playlistId) === Number(params.playlistId));
+      const filteredByPlaylist = all.filter((c) => Number(c.playlistId) === Number(params.playlistId));
+      if (filteredByPlaylist.length > 0) {
+        all = filteredByPlaylist;
+      }
     }
 
     if (params.category && params.category.trim() !== '') {
-      const targetCat = params.category.trim().toLowerCase();
-      all = all.filter((c) => {
-        const cat = (c.groupTitle || 'General').trim().toLowerCase();
-        return cat === targetCat;
-      });
+      all = all.filter((c) => matchCategory(c.groupTitle, params.category));
     }
 
     return {
@@ -83,7 +100,10 @@ export const channelApi = {
     let all = getAllLocalChannels();
 
     if (params.playlistId !== undefined && params.playlistId !== null) {
-      all = all.filter((c) => Number(c.playlistId) === Number(params.playlistId));
+      const filteredByPlaylist = all.filter((c) => Number(c.playlistId) === Number(params.playlistId));
+      if (filteredByPlaylist.length > 0) {
+        all = filteredByPlaylist;
+      }
     }
 
     let filtered = all.filter((c) => {
@@ -93,11 +113,7 @@ export const channelApi = {
     });
 
     if (params.category && params.category.trim() !== '') {
-      const targetCat = params.category.trim().toLowerCase();
-      filtered = filtered.filter((c) => {
-        const cat = (c.groupTitle || 'General').trim().toLowerCase();
-        return cat === targetCat;
-      });
+      filtered = filtered.filter((c) => matchCategory(c.groupTitle, params.category));
     }
 
     return {
@@ -135,9 +151,13 @@ export const channelApi = {
     } catch (err) {}
 
     const all = getAllLocalChannels();
-    const targetChannels = (playlistId !== undefined && playlistId !== null)
-      ? all.filter((c) => Number(c.playlistId) === Number(playlistId))
-      : all;
+    let targetChannels = all;
+    if (playlistId !== undefined && playlistId !== null) {
+      const filtered = all.filter((c) => Number(c.playlistId) === Number(playlistId));
+      if (filtered.length > 0) {
+        targetChannels = filtered;
+      }
+    }
     const catMap = new Map<string, number>();
 
     targetChannels.forEach((c) => {

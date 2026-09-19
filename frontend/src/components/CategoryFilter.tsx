@@ -1,5 +1,6 @@
 import React from 'react';
 import { Category } from '../types';
+import { matchCategory } from '../api/channels';
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -20,7 +21,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
         type="button"
         onClick={() => onSelectCategory(null)}
         className={`shrink-0 cursor-pointer select-none rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
-          selectedCategory === null
+          !selectedCategory
             ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
             : 'bg-secondary border border-border text-muted-foreground hover:text-foreground hover:bg-accent'
         }`}
@@ -29,7 +30,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
       </button>
 
       {categories.map((cat) => {
-        const isSelected = selectedCategory?.trim().toLowerCase() === cat.name.trim().toLowerCase();
+        const isSelected = Boolean(selectedCategory && matchCategory(selectedCategory, cat.name));
         return (
           <button
             key={cat.name}
