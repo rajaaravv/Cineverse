@@ -21,7 +21,7 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
   selectedPlaylistId: externalPlaylistId,
   onSelectPlaylist: externalSelectPlaylist,
 }) => {
-  const [channels, setChannels] = useState<Channel[]>([]);
+  const [allChannels, setAllChannels] = useState<Channel[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [internalPlaylistId, setInternalPlaylistId] = useState<number | undefined>(undefined);
@@ -33,6 +33,7 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
 
   const activePlaylistId = externalPlaylistId !== undefined ? externalPlaylistId : internalPlaylistId;
   const handlePlaylistChange = (id: number | undefined) => {
+    setSelectedCategory(null);
     if (externalSelectPlaylist) {
       externalSelectPlaylist(id);
     } else {
@@ -61,37 +62,42 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
     fetchMetadata();
   }, [activePlaylistId]);
 
-  // Load channels based on active filters
+  // Load all channels for active playlist
   const loadChannels = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await channelApi.getChannels({
         playlistId: activePlaylistId,
-        category: selectedCategory || undefined,
         page: 0,
-        size: 200,
+        size: 5000,
         sortBy: 'name',
         sortDir: 'asc',
       });
 
       if (response && Array.isArray(response.content)) {
-        setChannels(response.content);
+        setAllChannels(response.content);
       } else {
-        setChannels([]);
+        setAllChannels([]);
       }
     } catch (err) {
       console.error('Failed to load channels', err);
-      setChannels([]);
+      setAllChannels([]);
     } finally {
       setIsLoading(false);
     }
-  }, [activePlaylistId, selectedCategory]);
+  }, [activePlaylistId]);
 
   useEffect(() => {
     loadChannels();
   }, [loadChannels]);
 
-  const safeChannels = Array.isArray(channels) ? channels : [];
+  // Instant reactive category filtering
+  const safeChannels = React.useMemo(() => {
+    if (!selectedCategory) return allChannels;
+    const target = selectedCategory.trim().toLowerCase();
+    return allChannels.filter((c) => (c.groupTitle || 'General').trim().toLowerCase() === target);
+  }, [allChannels, selectedCategory]);
+
   const safeHistory = Array.isArray(historyItems) ? historyItems : [];
   const historyChannels: Channel[] = safeHistory.map((item) => ({
     id: item.channelId,
@@ -146,8 +152,8 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
         </div>
       </div>
 
-      {/* Featured Spotlight / Continue Watching Hero Card */}
-      {spotlightChannel && (
+      {/* Featured Spotlight / Continue Watching Hero Card (only when All Channels is selected) */}
+      {!selectedCategory && spotlightChannel && (
         <div className="relative mx-auto max-w-4xl overflow-hidden rounded-lg border border-border bg-card shadow-sm">
           {/* Hero Poster Media */}
           <div className="relative h-[280px] sm:h-[340px] w-full overflow-hidden bg-background">
@@ -213,8 +219,8 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
         </div>
       )}
 
-      {/* Favorites Shelf */}
-      {favoriteChannels.length > 0 && (
+      {/* Favorites Shelf (only on All Channels view) */}
+      {!selectedCategory && favoriteChannels.length > 0 && (
         <section className="space-y-3 animate-fade-in">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-foreground tracking-tight flex items-center gap-2">
@@ -236,8 +242,8 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
         </section>
       )}
 
-      {/* Featured Picks Shelf */}
-      {horizontalPicks.length > 0 && (
+      {/* Featured Picks Shelf (only on All Channels view) */}
+      {!selectedCategory && horizontalPicks.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-foreground tracking-tight flex items-center gap-2">
@@ -263,7 +269,7 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-foreground tracking-tight">
-            {selectedCategory ? `${selectedCategory} Channels` : 'Explore Live Streams'}
+            {selectedCategory ? `${selectedCategory}` : 'Explore Live Streams'}
           </h2>
           <span className="text-xs font-mono text-muted-foreground">
             {safeChannels.length} channels available
