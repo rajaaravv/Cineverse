@@ -1,6 +1,5 @@
 import client from './client';
-import { ApiResponse, WatchHistory } from '../types';
-import { FALLBACK_CHANNELS } from './channels';
+import { ApiResponse, Channel, WatchHistory } from '../types';
 
 const LOCAL_HISTORY_KEY = 'cineverse_history';
 
@@ -8,74 +7,82 @@ export const historyApi = {
   getAll: async (limit = 30): Promise<WatchHistory[]> => {
     try {
       const res = await client.get<ApiResponse<WatchHistory[]>>('/history', { params: { limit } });
-      if (res.data?.data) {
+      if (res.data?.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
         return res.data.data;
       }
     } catch (err) {
-      console.warn('Using local history fallback');
+      // Backend not reached, use local history
     }
 
     const saved = localStorage.getItem(LOCAL_HISTORY_KEY);
-    if (saved) return JSON.parse(saved).slice(0, limit);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Filter out legacy mock demo channels
+          const filtered = parsed.filter(
+            (item: WatchHistory) =>
+              item.playlistName !== 'Curated Cinema & News' &&
+              item.playlistName !== 'World Sports & Live TV' &&
+              item.channelName !== 'Scream VII - The Horror Movie Channel' &&
+              item.channelName !== 'Red Bull Extreme Sports HD'
+          );
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(filtered));
+          }
+          return filtered.slice(0, limit);
+        }
+      } catch (e) {}
+    }
 
-    const initialHistory: WatchHistory[] = [
-      {
-        id: 1,
-        channelId: 1,
-        channelName: 'Scream VII - The Horror Movie Channel',
-        tvgLogo: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80',
-        groupTitle: 'Movies',
-        streamUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-        playlistId: 1,
-        playlistName: 'Curated Cinema & News',
-        lastWatchedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-      },
-      {
-        id: 2,
-        channelId: 2,
-        channelName: 'Red Bull Extreme Sports HD',
-        tvgLogo: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=600&auto=format&fit=crop&q=80',
-        groupTitle: 'Sports',
-        streamUrl: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8',
-        playlistId: 1,
-        playlistName: 'Curated Cinema & News',
-        lastWatchedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      },
-    ];
-    localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(initialHistory));
-    return initialHistory;
+    return [];
   },
 
-  record: async (channelId: number): Promise<WatchHistory> => {
+  record: async (channelId: number, channelData?: Channel): Promise<WatchHistory | null> => {
     try {
       const res = await client.post<ApiResponse<WatchHistory>>(`/history/${channelId}`);
-      return res.data.data;
+      if (res.data?.data) return res.data.data;
     } catch (err) {
-      const ch = FALLBACK_CHANNELS.find((c) => c.id === channelId) || FALLBACK_CHANNELS[0];
-      const newEntry: WatchHistory = {
-        id: Date.now(),
-        channelId: ch.id,
-        channelName: ch.name,
-        tvgLogo: ch.tvgLogo,
-        groupTitle: ch.groupTitle,
-        streamUrl: ch.streamUrl,
-        playlistId: ch.playlistId,
-        playlistName: ch.playlistName,
-        lastWatchedAt: new Date().toISOString(),
-      };
-      const saved = localStorage.getItem(LOCAL_HISTORY_KEY);
-      let list: WatchHistory[] = saved ? JSON.parse(saved) : [];
-      list = [newEntry, ...list.filter((item) => item.channelId !== channelId)].slice(0, 50);
-      localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(list));
-      return newEntry;
+      // Fall through to local recording
     }
+
+    let ch = channelData;
+    if (!ch) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('cineverse_custom_channels') || '[]');
+        ch = stored.find((c: Channel) => Number(c.id) === Number(channelId));
+      } catch (e) {}
+    }
+
+    if (!ch) return null;
+
+    const newEntry: WatchHistory = {
+      id: Date.now(),
+      channelId: Number(ch.id),
+      channelName: ch.name || 'Live Channel',
+      tvgLogo: ch.tvgLogo,
+      groupTitle: ch.groupTitle || 'General',
+      streamUrl: ch.streamUrl,
+      playlistId: Number(ch.playlistId) || 0,
+      playlistName: ch.playlistName || 'My Playlist',
+      lastWatchedAt: new Date().toISOString(),
+    };
+
+    const saved = localStorage.getItem(LOCAL_HISTORY_KEY);
+    let list: WatchHistory[] = [];
+    try {
+      if (saved) list = JSON.parse(saved);
+    } catch (e) {}
+
+    list = [newEntry, ...list.filter((item) => Number(item.channelId) !== Number(channelId))].slice(0, 50);
+    localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(list));
+    return newEntry;
   },
 
   clear: async (): Promise<void> => {
     try {
       await client.delete('/history');
-    } catch (err) {
-      localStorage.removeItem(LOCAL_HISTORY_KEY);
-    }
+    } catch (err) {}
+    localStorage.removeItem(LOCAL_HISTORY_KEY);
   },
 };

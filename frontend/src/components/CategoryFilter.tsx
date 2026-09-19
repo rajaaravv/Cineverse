@@ -28,12 +28,13 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
       </button>
 
       {categories.map((cat) => {
-        const isSelected = selectedCategory?.toLowerCase() === cat.name.toLowerCase();
+        const isSelected = selectedCategory?.trim().toLowerCase() === cat.name.trim().toLowerCase();
         return (
           <button
             key={cat.name}
-            onClick={() => onSelectCategory(cat.name)}
-            className={`shrink-0 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
+            type="button"
+            onClick={() => onSelectCategory(isSelected ? null : cat.name)}
+            className={`shrink-0 cursor-pointer rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all ${
               isSelected
                 ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
                 : 'bg-secondary border border-border text-muted-foreground hover:text-foreground hover:bg-accent'

@@ -69,19 +69,19 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
         playlistId: activePlaylistId,
         category: selectedCategory || undefined,
         page: 0,
-        size: 48,
+        size: 200,
         sortBy: 'name',
         sortDir: 'asc',
       });
 
       if (response && Array.isArray(response.content)) {
         setChannels(response.content);
+      } else {
+        setChannels([]);
       }
     } catch (err) {
       console.error('Failed to load channels', err);
-      if (activePlaylistId !== undefined) {
-        handlePlaylistChange(undefined);
-      }
+      setChannels([]);
     } finally {
       setIsLoading(false);
     }

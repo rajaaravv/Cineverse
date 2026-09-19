@@ -18,7 +18,13 @@ function getAllLocalChannels(): Channel[] {
   try {
     const custom = JSON.parse(localStorage.getItem('cineverse_custom_channels') || '[]');
     if (Array.isArray(custom)) {
-      return custom;
+      return custom.map((c, index) => ({
+        ...c,
+        id: Number(c.id) || Date.now() + index,
+        playlistId: Number(c.playlistId) || 0,
+        groupTitle: typeof c.groupTitle === 'string' && c.groupTitle.trim() ? c.groupTitle.trim() : 'General',
+        name: typeof c.name === 'string' && c.name.trim() ? c.name.trim() : `Channel ${index + 1}`,
+      }));
     }
   } catch (e) {}
   return [];
@@ -37,21 +43,23 @@ export const channelApi = {
 
     let all = getAllLocalChannels();
 
-    if (params.playlistId) {
-      all = all.filter((c) => c.playlistId === params.playlistId);
+    if (params.playlistId !== undefined && params.playlistId !== null) {
+      all = all.filter((c) => Number(c.playlistId) === Number(params.playlistId));
     }
 
-    if (params.category) {
-      all = all.filter(
-        (c) => c.groupTitle.toLowerCase() === params.category!.toLowerCase()
-      );
+    if (params.category && params.category.trim() !== '') {
+      const targetCat = params.category.trim().toLowerCase();
+      all = all.filter((c) => {
+        const cat = (c.groupTitle || 'General').trim().toLowerCase();
+        return cat === targetCat;
+      });
     }
 
     return {
       content: all,
       totalElements: all.length,
       totalPages: 1,
-      size: 48,
+      size: all.length || 48,
       number: 0,
       first: true,
       last: true,
@@ -71,28 +79,32 @@ export const channelApi = {
       // Backend not reached, proceed with local search
     }
 
-    const q = query.toLowerCase();
+    const q = (query || '').trim().toLowerCase();
     let all = getAllLocalChannels();
 
-    if (params.playlistId) {
-      all = all.filter((c) => c.playlistId === params.playlistId);
+    if (params.playlistId !== undefined && params.playlistId !== null) {
+      all = all.filter((c) => Number(c.playlistId) === Number(params.playlistId));
     }
 
-    let filtered = all.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.groupTitle.toLowerCase().includes(q)
-    );
+    let filtered = all.filter((c) => {
+      const name = (c.name || '').toLowerCase();
+      const cat = (c.groupTitle || '').toLowerCase();
+      return name.includes(q) || cat.includes(q);
+    });
 
-    if (params.category) {
-      filtered = filtered.filter(
-        (c) => c.groupTitle.toLowerCase() === params.category!.toLowerCase()
-      );
+    if (params.category && params.category.trim() !== '') {
+      const targetCat = params.category.trim().toLowerCase();
+      filtered = filtered.filter((c) => {
+        const cat = (c.groupTitle || 'General').trim().toLowerCase();
+        return cat === targetCat;
+      });
     }
 
     return {
       content: filtered,
       totalElements: filtered.length,
       totalPages: 1,
-      size: 24,
+      size: filtered.length || 24,
       number: 0,
       first: true,
       last: true,
@@ -107,7 +119,7 @@ export const channelApi = {
     } catch (err) {}
 
     const all = getAllLocalChannels();
-    const found = all.find((c) => c.id === id);
+    const found = all.find((c) => Number(c.id) === Number(id));
     if (found) return found;
     return FALLBACK_CHANNELS[0];
   },
@@ -115,7 +127,7 @@ export const channelApi = {
   getCategories: async (playlistId?: number): Promise<Category[]> => {
     try {
       const res = await client.get<ApiResponse<Category[]>>('/channels/categories', {
-        params: playlistId ? { playlistId } : {},
+        params: playlistId !== undefined && playlistId !== null ? { playlistId } : {},
       });
       if (res.data?.data && res.data.data.length > 0) {
         return res.data.data;
@@ -123,12 +135,16 @@ export const channelApi = {
     } catch (err) {}
 
     const all = getAllLocalChannels();
-    const targetChannels = playlistId ? all.filter((c) => c.playlistId === playlistId) : all;
+    const targetChannels = (playlistId !== undefined && playlistId !== null)
+      ? all.filter((c) => Number(c.playlistId) === Number(playlistId))
+      : all;
     const catMap = new Map<string, number>();
 
     targetChannels.forEach((c) => {
-      const cat = c.groupTitle || 'General';
-      catMap.set(cat, (catMap.get(cat) || 0) + 1);
+      const cat = (c.groupTitle || 'General').trim();
+      if (cat) {
+        catMap.set(cat, (catMap.get(cat) || 0) + 1);
+      }
     });
 
     if (catMap.size === 0) return FALLBACK_CATEGORIES;

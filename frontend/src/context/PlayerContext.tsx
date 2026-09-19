@@ -21,7 +21,19 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(() => {
     try {
       const saved = localStorage.getItem('cineverse_last_channel');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (
+          parsed?.playlistName === 'Curated Cinema & News' ||
+          parsed?.playlistName === 'World Sports & Live TV' ||
+          parsed?.name === 'Scream VII - The Horror Movie Channel'
+        ) {
+          localStorage.removeItem('cineverse_last_channel');
+          return null;
+        }
+        return parsed;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -58,7 +70,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setChannelQueue(queue);
     }
     // Record in watch history
-    historyApi.record(channel.id).catch((err) => {
+    historyApi.record(channel.id, channel).catch((err) => {
       console.warn('Failed to record history', err);
     });
   };
