@@ -58,24 +58,48 @@ export const playlistApi = {
   createFromUrlOrText: async (data: { name: string; url?: string; content?: string }): Promise<Playlist> => {
     try {
       const res = await client.post<ApiResponse<Playlist>>('/playlists', data);
-      return res.data.data;
+      if (res.data?.data) return res.data.data;
     } catch (err) {
-      const newPlaylist: Playlist = {
-        id: Date.now(),
-        name: data.name,
-        sourceUrl: data.url || null,
-        isUrl: !!data.url,
-        channelCount: 12,
-        createdAt: new Date().toISOString(),
-      };
-      const existing = await playlistApi.getAll();
-      const updated = [newPlaylist, ...existing];
-      localStorage.setItem('cineverse_playlists', JSON.stringify(updated));
-      return newPlaylist;
+      console.warn('Backend playlist creation failed, using local parser');
     }
+
+    const playlistId = Date.now();
+    let channels: any[] = [];
+
+    if (data.content) {
+      const { parseM3UContent } = await import('../utils/m3uParser');
+      channels = parseM3UContent(data.content, playlistId, data.name);
+    }
+
+    const newPlaylist: Playlist = {
+      id: playlistId,
+      name: data.name,
+      sourceUrl: data.url || null,
+      isUrl: !!data.url,
+      channelCount: channels.length > 0 ? channels.length : 12,
+      createdAt: new Date().toISOString(),
+    };
+
+    const existing = await playlistApi.getAll();
+    const updated = [newPlaylist, ...existing];
+    localStorage.setItem('cineverse_playlists', JSON.stringify(updated));
+
+    if (channels.length > 0) {
+      try {
+        const storedChannels = JSON.parse(localStorage.getItem('cineverse_custom_channels') || '[]');
+        localStorage.setItem('cineverse_custom_channels', JSON.stringify([...channels, ...storedChannels]));
+      } catch (e) {}
+    }
+
+    return newPlaylist;
   },
 
   uploadFile: async (name: string, file: File): Promise<Playlist> => {
+    let fileText = '';
+    try {
+      fileText = await file.text();
+    } catch (e) {}
+
     try {
       const formData = new FormData();
       formData.append('name', name);
@@ -83,21 +107,41 @@ export const playlistApi = {
       const res = await client.post<ApiResponse<Playlist>>('/playlists/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      return res.data.data;
+      if (res.data?.data) return res.data.data;
     } catch (err) {
-      const newPlaylist: Playlist = {
-        id: Date.now(),
-        name: name || file.name,
-        sourceUrl: null,
-        isUrl: false,
-        channelCount: 15,
-        createdAt: new Date().toISOString(),
-      };
-      const existing = await playlistApi.getAll();
-      const updated = [newPlaylist, ...existing];
-      localStorage.setItem('cineverse_playlists', JSON.stringify(updated));
-      return newPlaylist;
+      console.warn('Backend upload failed, parsing M3U in browser');
     }
+
+    const playlistId = Date.now();
+    const playlistName = name || file.name.replace(/\.(m3u|m3u8)$/i, '');
+    let channels: any[] = [];
+
+    if (fileText) {
+      const { parseM3UContent } = await import('../utils/m3uParser');
+      channels = parseM3UContent(fileText, playlistId, playlistName);
+    }
+
+    const newPlaylist: Playlist = {
+      id: playlistId,
+      name: playlistName,
+      sourceUrl: null,
+      isUrl: false,
+      channelCount: channels.length > 0 ? channels.length : 15,
+      createdAt: new Date().toISOString(),
+    };
+
+    const existing = await playlistApi.getAll();
+    const updated = [newPlaylist, ...existing];
+    localStorage.setItem('cineverse_playlists', JSON.stringify(updated));
+
+    if (channels.length > 0) {
+      try {
+        const storedChannels = JSON.parse(localStorage.getItem('cineverse_custom_channels') || '[]');
+        localStorage.setItem('cineverse_custom_channels', JSON.stringify([...channels, ...storedChannels]));
+      } catch (e) {}
+    }
+
+    return newPlaylist;
   },
 
   rename: async (id: number, name: string): Promise<Playlist> => {
