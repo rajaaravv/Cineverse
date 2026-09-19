@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Globe, Upload, Sparkles, Loader2 } from 'lucide-react';
+import { X, Globe, Upload, FileText, Loader2 } from 'lucide-react';
 import { playlistApi } from '../api/playlists';
 import { Playlist } from '../types';
 
@@ -23,12 +23,6 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
-
-  const handleApplyPreset = (presetName: string, presetUrl: string) => {
-    setName(presetName);
-    setUrl(presetUrl);
-    setActiveTab('URL');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +75,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
         <div className="flex items-center justify-between pb-4 border-b border-border">
           <div>
             <h2 className="text-base font-bold text-card-foreground">Import M3U Playlist</h2>
-            <p className="text-xs text-muted-foreground">Add channels from your IPTV provider, M3U URL or file</p>
+            <p className="text-xs text-muted-foreground">Add channels from your IPTV provider, M3U URL, paste content, or upload file</p>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground bg-secondary border border-border">
             <X className="h-4 w-4" />
@@ -133,7 +127,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
             <label className="block text-xs font-medium text-foreground">Playlist Name</label>
             <input
               type="text"
-              placeholder={activeTab === 'DEMO' ? 'e.g., Cineverse Curated' : 'e.g., Sports & Movies HD'}
+              placeholder="e.g., My Favorite TV & Sports"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="mt-1.5 w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-input focus:outline-none transition"
@@ -141,7 +135,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
           </div>
 
           {activeTab === 'URL' && (
-            <div className="space-y-2">
+            <div>
               <label className="block text-xs font-medium text-foreground">M3U / M3U8 URL</label>
               <input
                 type="url"
@@ -149,35 +143,8 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
                 placeholder="https://example.com/playlist.m3u"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-input focus:outline-none transition"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-input focus:outline-none transition"
               />
-
-              <div className="pt-1.5">
-                <span className="text-[11px] font-mono text-muted-foreground">Quick Public Presets:</span>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleApplyPreset('IPTV News US', 'https://iptv-org.github.io/iptv/categories/news.m3u')}
-                    className="rounded-md border border-border bg-secondary px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent"
-                  >
-                    News Channels
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleApplyPreset('IPTV Sports Global', 'https://iptv-org.github.io/iptv/categories/sports.m3u')}
-                    className="rounded-md border border-border bg-secondary px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent"
-                  >
-                    Sports Streams
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleApplyPreset('IPTV Movies HD', 'https://iptv-org.github.io/iptv/categories/movies.m3u')}
-                    className="rounded-md border border-border bg-secondary px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent"
-                  >
-                    Movies & Series
-                  </button>
-                </div>
-              </div>
             </div>
           )}
 
@@ -205,15 +172,6 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
                 className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-xs text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1 file:text-xs file:font-medium file:text-foreground hover:file:bg-accent"
               />
-            </div>
-          )}
-
-          {activeTab === 'DEMO' && (
-            <div className="rounded-lg border border-border bg-muted p-3.5 text-xs text-muted-foreground leading-relaxed">
-              <p className="font-semibold text-foreground">Ready-to-stream Cineverse Public Channels</p>
-              <p className="mt-1 text-muted-foreground">
-                Imports verified public live feeds including Bloomberg TV, France 24, Red Bull Extreme Sports, NASA TV, and demo movies.
-              </p>
             </div>
           )}
 

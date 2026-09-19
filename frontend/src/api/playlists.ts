@@ -18,7 +18,18 @@ export const playlistApi = {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          const filtered = parsed.filter(
+            (p: Playlist) =>
+              p.name !== 'Curated Cinema & News' &&
+              p.name !== 'World Sports & Live TV' &&
+              p.name !== 'Global Public News & Entertainment'
+          );
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem('cineverse_playlists', JSON.stringify(filtered));
+          }
+          return filtered;
+        }
       } catch {}
     }
     return [];

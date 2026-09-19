@@ -39,10 +39,6 @@ export const channelApi = {
 
     if (params.playlistId) {
       all = all.filter((c) => c.playlistId === params.playlistId);
-      // If none found for this specific playlistId, return all custom channels for it
-      if (all.length === 0 && params.playlistId === 1) {
-        all = FALLBACK_CHANNELS;
-      }
     }
 
     if (params.category) {
