@@ -14,14 +14,21 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
   onClose,
   onPlaylistAdded,
 }) => {
-  const [activeTab, setActiveTab] = useState<'URL' | 'FILE' | 'DEMO'>('URL');
+  const [activeTab, setActiveTab] = useState<'URL' | 'FILE' | 'TEXT' | 'DEMO'>('URL');
   const [name, setName] = useState<string>('');
   const [url, setUrl] = useState<string>('');
+  const [rawText, setRawText] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
+  const handleApplyPreset = (presetName: string, presetUrl: string) => {
+    setName(presetName);
+    setUrl(presetUrl);
+    setActiveTab('URL');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +46,14 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
           name: name.trim(),
           url: url.trim(),
         });
+      } else if (activeTab === 'TEXT') {
+        if (!name.trim()) throw new Error('Please enter a playlist name');
+        if (!rawText.trim()) throw new Error('Please paste your M3U content');
+
+        createdPlaylist = await playlistApi.createFromUrlOrText({
+          name: name.trim(),
+          content: rawText.trim(),
+        });
       } else if (activeTab === 'FILE') {
         if (!file) throw new Error('Please select an M3U file to upload');
 
@@ -55,6 +70,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
       onClose();
       setName('');
       setUrl('');
+      setRawText('');
       setFile(null);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to import playlist');
@@ -79,36 +95,46 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
         </div>
 
         {/* Tab Selection */}
-        <div className="mt-5 grid grid-cols-3 gap-1.5 rounded-lg bg-muted p-1 border border-border">
+        <div className="mt-5 grid grid-cols-4 gap-1 rounded-lg bg-muted p-1 border border-border">
           <button
             type="button"
             onClick={() => setActiveTab('URL')}
-            className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition-all ${
               activeTab === 'URL' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Globe className="h-3.5 w-3.5" />
-            <span>M3U URL</span>
+            <span>URL</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('TEXT')}
+            className={`flex items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition-all ${
+              activeTab === 'TEXT' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            <span>Paste</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('FILE')}
-            className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition-all ${
               activeTab === 'FILE' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Upload className="h-3.5 w-3.5" />
-            <span>File Upload</span>
+            <span>File</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('DEMO')}
-            className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition-all ${
               activeTab === 'DEMO' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Sparkles className="h-3.5 w-3.5" />
-            <span>Curated Feeds</span>
+            <span>Curated</span>
           </button>
         </div>
 
@@ -131,7 +157,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
           </div>
 
           {activeTab === 'URL' && (
-            <div>
+            <div className="space-y-2">
               <label className="block text-xs font-medium text-foreground">M3U / M3U8 URL</label>
               <input
                 type="url"
@@ -139,7 +165,48 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
                 placeholder="https://example.com/playlist.m3u"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-input focus:outline-none transition"
+                className="w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-input focus:outline-none transition"
+              />
+
+              <div className="pt-1.5">
+                <span className="text-[11px] font-mono text-muted-foreground">Quick Public Presets:</span>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPreset('IPTV News US', 'https://iptv-org.github.io/iptv/categories/news.m3u')}
+                    className="rounded-md border border-border bg-secondary px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent"
+                  >
+                    News Channels
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPreset('IPTV Sports Global', 'https://iptv-org.github.io/iptv/categories/sports.m3u')}
+                    className="rounded-md border border-border bg-secondary px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent"
+                  >
+                    Sports Streams
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPreset('IPTV Movies HD', 'https://iptv-org.github.io/iptv/categories/movies.m3u')}
+                    className="rounded-md border border-border bg-secondary px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent"
+                  >
+                    Movies & Series
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'TEXT' && (
+            <div>
+              <label className="block text-xs font-medium text-foreground">Paste M3U Text Content</label>
+              <textarea
+                required
+                rows={4}
+                placeholder={`#EXTM3U\n#EXTINF:-1 tvg-logo="https://..." group-title="News",CNN Live\nhttps://example.com/stream.m3u8`}
+                value={rawText}
+                onChange={(e) => setRawText(e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3.5 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:border-input focus:outline-none transition"
               />
             </div>
           )}

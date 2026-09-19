@@ -1,47 +1,27 @@
 import client from './client';
 import { ApiResponse, Playlist } from '../types';
 
-export const FALLBACK_PLAYLISTS: Playlist[] = [
-  {
-    id: 1,
-    name: 'Curated Cinema & News',
-    sourceUrl: 'https://cineverse.tv/feed/curated.m3u',
-    isUrl: true,
-    channelCount: 10,
-    createdAt: '2026-09-10T00:00:00',
-  },
-  {
-    id: 2,
-    name: 'World Sports & Live TV',
-    sourceUrl: 'https://cineverse.tv/feed/sports.m3u',
-    isUrl: true,
-    channelCount: 8,
-    createdAt: '2026-09-09T18:00:00',
-  },
-];
+export const FALLBACK_PLAYLISTS: Playlist[] = [];
 
 export const playlistApi = {
   getAll: async (): Promise<Playlist[]> => {
     try {
       const res = await client.get<ApiResponse<Playlist[]>>('/playlists');
-      if (res.data?.data && res.data.data.length > 0) {
+      if (res.data?.data && Array.isArray(res.data.data)) {
         localStorage.setItem('cineverse_playlists', JSON.stringify(res.data.data));
         return res.data.data;
       }
     } catch (err) {
-      console.warn('Backend playlist fetch failed, using fallback playlists');
+      // Backend not reached, check local storage
     }
     const saved = localStorage.getItem('cineverse_playlists');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch {
-        // use fallback
-      }
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
     }
-    localStorage.setItem('cineverse_playlists', JSON.stringify(FALLBACK_PLAYLISTS));
-    return FALLBACK_PLAYLISTS;
+    return [];
   },
 
   getById: async (id: number): Promise<Playlist> => {
@@ -65,10 +45,48 @@ export const playlistApi = {
 
     const playlistId = Date.now();
     let channels: any[] = [];
+    let rawContent = data.content || '';
 
-    if (data.content) {
-      const { parseM3UContent } = await import('../utils/m3uParser');
-      channels = parseM3UContent(data.content, playlistId, data.name);
+    // If URL is provided, try to fetch the text content
+    if (data.url && !rawContent) {
+      try {
+        const response = await fetch(data.url);
+        if (response.ok) {
+          rawContent = await response.text();
+        }
+      } catch (fetchErr) {
+        console.warn('Direct fetch failed due to CORS, attempting via proxy or creating stream channel');
+        try {
+          const proxyRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(data.url)}`);
+          if (proxyRes.ok) {
+            rawContent = await proxyRes.text();
+          }
+        } catch (proxyErr) {
+          console.warn('Proxy fetch also failed');
+        }
+      }
+    }
+
+    const { parseM3UContent } = await import('../utils/m3uParser');
+
+    if (rawContent) {
+      channels = parseM3UContent(rawContent, playlistId, data.name);
+    }
+
+    // If still no channels parsed from URL (e.g. single stream URL), create single channel entry
+    if (channels.length === 0 && data.url) {
+      channels = [
+        {
+          id: playlistId * 10 + 1,
+          playlistId,
+          playlistName: data.name,
+          name: `${data.name} Live Stream`,
+          groupTitle: 'General',
+          streamUrl: data.url,
+          status: 'ACTIVE',
+          favorite: false,
+        },
+      ];
     }
 
     const newPlaylist: Playlist = {
@@ -76,7 +94,7 @@ export const playlistApi = {
       name: data.name,
       sourceUrl: data.url || null,
       isUrl: !!data.url,
-      channelCount: channels.length > 0 ? channels.length : 12,
+      channelCount: channels.length > 0 ? channels.length : 1,
       createdAt: new Date().toISOString(),
     };
 
