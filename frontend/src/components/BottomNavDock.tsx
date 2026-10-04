@@ -11,12 +11,12 @@ export const BottomNavDock: React.FC<BottomNavDockProps> = ({ onOpenSearch }) =>
   const navigate = useNavigate();
 
   return (
-    <div className="fixed bottom-5 inset-x-0 z-40 flex justify-center pointer-events-none px-4 font-sans">
-      <nav className="pointer-events-auto flex items-center gap-1.5 rounded-lg bg-card/90 border border-border p-1.5 shadow-sm backdrop-blur-xl transition-all">
+    <div className="fixed bottom-4 sm:bottom-5 inset-x-0 z-40 flex justify-center pointer-events-none px-2 sm:px-4 font-sans">
+      <nav className="pointer-events-auto flex items-center gap-1 sm:gap-1.5 rounded-lg bg-card/90 border border-border p-1 sm:p-1.5 shadow-sm backdrop-blur-xl transition-all max-w-[calc(100vw-1rem)] overflow-x-auto no-scrollbar">
         {/* Home */}
         <button
           onClick={() => navigate('/channels')}
-          className={`flex items-center gap-1.5 rounded-md px-3.5 py-2 text-xs font-medium transition-all ${
+          className={`flex items-center gap-1.5 rounded-md px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium transition-all shrink-0 ${
             location.pathname === '/channels' || location.pathname === '/'
               ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
               : 'text-muted-foreground hover:text-foreground hover:bg-accent'
@@ -25,14 +25,14 @@ export const BottomNavDock: React.FC<BottomNavDockProps> = ({ onOpenSearch }) =>
         >
           <Home className="h-4 w-4" />
           {(location.pathname === '/channels' || location.pathname === '/') && (
-            <span className="font-semibold">Home</span>
+            <span className="font-semibold hidden min-[380px]:inline">Home</span>
           )}
         </button>
 
         {/* Global Search Button */}
         <button
           onClick={onOpenSearch}
-          className="flex items-center gap-1.5 rounded-md px-3.5 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+          className="flex items-center gap-1.5 rounded-md px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0"
           title="Search Channels (Ctrl+K)"
         >
           <Search className="h-4 w-4" />
@@ -42,7 +42,7 @@ export const BottomNavDock: React.FC<BottomNavDockProps> = ({ onOpenSearch }) =>
         {/* Favorites */}
         <button
           onClick={() => navigate('/favorites')}
-          className={`flex items-center gap-1.5 rounded-md px-3.5 py-2 text-xs font-medium transition-all ${
+          className={`flex items-center gap-1.5 rounded-md px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium transition-all shrink-0 ${
             location.pathname === '/favorites'
               ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
               : 'text-muted-foreground hover:text-foreground hover:bg-accent'
@@ -50,13 +50,13 @@ export const BottomNavDock: React.FC<BottomNavDockProps> = ({ onOpenSearch }) =>
           title="Favorite Channels"
         >
           <Star className={`h-4 w-4 ${location.pathname === '/favorites' ? 'fill-current' : ''}`} />
-          {location.pathname === '/favorites' && <span className="font-semibold">Favorites</span>}
+          {location.pathname === '/favorites' && <span className="font-semibold hidden min-[380px]:inline">Favorites</span>}
         </button>
 
         {/* Watch History */}
         <button
           onClick={() => navigate('/history')}
-          className={`flex items-center gap-1.5 rounded-md px-3.5 py-2 text-xs font-medium transition-all ${
+          className={`flex items-center gap-1.5 rounded-md px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium transition-all shrink-0 ${
             location.pathname === '/history'
               ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
               : 'text-muted-foreground hover:text-foreground hover:bg-accent'
@@ -64,13 +64,13 @@ export const BottomNavDock: React.FC<BottomNavDockProps> = ({ onOpenSearch }) =>
           title="Watch History"
         >
           <History className="h-4 w-4" />
-          {location.pathname === '/history' && <span className="font-semibold">History</span>}
+          {location.pathname === '/history' && <span className="font-semibold hidden min-[380px]:inline">History</span>}
         </button>
 
         {/* Profile */}
         <button
           onClick={() => navigate('/profile')}
-          className={`flex items-center gap-1.5 rounded-md px-3.5 py-2 text-xs font-medium transition-all ${
+          className={`flex items-center gap-1.5 rounded-md px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium transition-all shrink-0 ${
             location.pathname === '/profile'
               ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
               : 'text-muted-foreground hover:text-foreground hover:bg-accent'
@@ -78,7 +78,7 @@ export const BottomNavDock: React.FC<BottomNavDockProps> = ({ onOpenSearch }) =>
           title="Account Profile"
         >
           <User className="h-4 w-4" />
-          {location.pathname === '/profile' && <span className="font-semibold">Profile</span>}
+          {location.pathname === '/profile' && <span className="font-semibold hidden min-[380px]:inline">Profile</span>}
         </button>
       </nav>
     </div>

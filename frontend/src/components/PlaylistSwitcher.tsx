@@ -55,7 +55,7 @@ export const PlaylistSwitcher: React.FC<PlaylistSwitcherProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1.5 w-64 rounded-lg bg-popover border border-border shadow-sm p-1.5 z-50 animate-scale-in text-popover-foreground">
+        <div className="absolute top-full right-0 sm:right-0 mt-1.5 w-64 rounded-lg bg-popover border border-border shadow-sm p-1.5 z-50 animate-scale-in text-popover-foreground">
           <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
             Select Playlist Feed
           </div>

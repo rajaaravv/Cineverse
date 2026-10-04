@@ -87,21 +87,26 @@ export const channelApi = {
     if (local.length > 0) {
       let filtered = local;
       if (params.playlistId !== undefined && params.playlistId !== null) {
-        const byPl = local.filter((c) => Number(c.playlistId) === Number(params.playlistId));
-        if (byPl.length > 0) filtered = byPl;
+        filtered = local.filter((c) => Number(c.playlistId) === Number(params.playlistId));
       }
       if (params.category && params.category.trim() !== '') {
         filtered = filtered.filter((c) => matchCategory(c.groupTitle, params.category));
       }
+
+      const totalElements = filtered.length;
+      const page = params.page || 0;
+      const size = params.size !== undefined ? params.size : 5000;
+      const paginated = filtered.slice(page * size, (page + 1) * size);
+
       return {
-        content: filtered,
-        totalElements: filtered.length,
-        totalPages: 1,
-        size: filtered.length || 48,
-        number: 0,
-        first: true,
-        last: true,
-        empty: filtered.length === 0,
+        content: paginated,
+        totalElements,
+        totalPages: Math.ceil(totalElements / size) || 1,
+        size,
+        number: page,
+        first: page === 0,
+        last: (page + 1) * size >= totalElements,
+        empty: totalElements === 0,
       };
     }
 
@@ -127,40 +132,81 @@ export const channelApi = {
   },
 
   searchChannels: async (query: string, params: ChannelFilterParams = {}): Promise<PageResponse<Channel>> => {
-    const q = (query || '').trim().toLowerCase();
+    const rawQ = (query || '').trim();
+    const q = rawQ.toLowerCase();
     const local = getAllLocalChannels();
 
     if (local.length > 0) {
       let filtered = local;
+
+      // 1. Filter by playlist if specified
       if (params.playlistId !== undefined && params.playlistId !== null) {
-        const byPl = local.filter((c) => Number(c.playlistId) === Number(params.playlistId));
-        if (byPl.length > 0) filtered = byPl;
+        filtered = local.filter((c) => Number(c.playlistId) === Number(params.playlistId));
       }
-      if (q) {
-        filtered = filtered.filter((c) => {
-          const name = (c.name || '').toLowerCase();
-          const cat = (c.groupTitle || '').toLowerCase();
-          return name.includes(q) || cat.includes(q);
-        });
-      }
+
+      // 2. Filter by category if specified
       if (params.category && params.category.trim() !== '') {
         filtered = filtered.filter((c) => matchCategory(c.groupTitle, params.category));
       }
+
+      // 3. Multi-token smart search if query provided
+      if (q) {
+        const tokens = q.split(/\s+/).filter(Boolean);
+
+        filtered = filtered.filter((c) => {
+          const name = (c.name || '').toLowerCase();
+          const group = (c.groupTitle || '').toLowerCase();
+          const tvgName = (c.tvgName || '').toLowerCase();
+          const tvgId = (c.tvgId || '').toLowerCase();
+          const plName = (c.playlistName || '').toLowerCase();
+          const fullSearchText = `${name} ${group} ${tvgName} ${tvgId} ${plName}`;
+
+          // Every token must match somewhere in the channel's metadata
+          return tokens.every((token) => fullSearchText.includes(token));
+        });
+
+        // 4. Relevance sorting: prioritize exact match, title prefix, then title contains
+        filtered.sort((a, b) => {
+          const aName = (a.name || '').toLowerCase();
+          const bName = (b.name || '').toLowerCase();
+
+          if (aName === q && bName !== q) return -1;
+          if (bName === q && aName !== q) return 1;
+
+          const aStarts = aName.startsWith(q);
+          const bStarts = bName.startsWith(q);
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+
+          const aContains = aName.includes(q);
+          const bContains = bName.includes(q);
+          if (aContains && !bContains) return -1;
+          if (!aContains && bContains) return 1;
+
+          return 0;
+        });
+      }
+
+      const totalElements = filtered.length;
+      const page = params.page || 0;
+      const size = params.size || 50;
+      const paginated = filtered.slice(page * size, (page + 1) * size);
+
       return {
-        content: filtered,
-        totalElements: filtered.length,
-        totalPages: 1,
-        size: filtered.length || 24,
-        number: 0,
-        first: true,
-        last: true,
-        empty: filtered.length === 0,
+        content: paginated,
+        totalElements,
+        totalPages: Math.ceil(totalElements / size) || 1,
+        size,
+        number: page,
+        first: page === 0,
+        last: (page + 1) * size >= totalElements,
+        empty: totalElements === 0,
       };
     }
 
     try {
       const res = await client.get<ApiResponse<PageResponse<Channel>>>('/channels/search', {
-        params: { ...params, query },
+        params: { ...params, query: rawQ },
       });
       if (res.data?.data) {
         return res.data.data;
@@ -171,7 +217,7 @@ export const channelApi = {
       content: [],
       totalElements: 0,
       totalPages: 1,
-      size: 24,
+      size: params.size || 24,
       number: 0,
       first: true,
       last: true,

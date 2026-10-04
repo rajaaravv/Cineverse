@@ -13,6 +13,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Channel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [brokenLogos, setBrokenLogos] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
   const { playChannel } = usePlayer();
 
@@ -20,7 +21,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
       setQuery('');
-      channelApi.getChannels({ page: 0, size: 12 }).then((res) => {
+      channelApi.getChannels({ page: 0, size: 24 }).then((res) => {
         if (res && Array.isArray(res.content)) {
           setResults(res.content);
         }
@@ -32,7 +33,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     if (!isOpen) return;
 
     if (!query.trim()) {
-      channelApi.getChannels({ page: 0, size: 12 }).then((res) => {
+      channelApi.getChannels({ page: 0, size: 24 }).then((res) => {
         if (res && Array.isArray(res.content)) {
           setResults(res.content);
         }
@@ -40,10 +41,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       return;
     }
 
+    setIsLoading(true);
     const handler = setTimeout(async () => {
-      setIsLoading(true);
       try {
-        const res = await channelApi.searchChannels(query.trim(), { page: 0, size: 24 });
+        const res = await channelApi.searchChannels(query.trim(), { page: 0, size: 50 });
         if (res && Array.isArray(res.content)) {
           setResults(res.content);
         }
@@ -52,7 +53,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       } finally {
         setIsLoading(false);
       }
-    }, 200);
+    }, 150);
 
     return () => clearTimeout(handler);
   }, [query, isOpen]);
@@ -74,6 +75,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && safeResults.length > 0) {
+                playChannel(safeResults[0], safeResults);
+                onClose();
+              }
+            }}
             placeholder="Search channels, sports, news, movies, series..."
             className="flex-1 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
@@ -120,8 +127,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                   className="group cursor-pointer rounded-lg border border-border bg-card p-3 flex items-center gap-3 transition hover:border-muted-foreground/40 hover:bg-accent"
                 >
                   <div className="h-10 w-10 rounded-md bg-background border border-border flex items-center justify-center shrink-0 overflow-hidden">
-                    {ch.tvgLogo ? (
-                      <img src={ch.tvgLogo} alt={ch.name} className="h-full w-full object-cover" />
+                    {ch.tvgLogo && !brokenLogos.has(ch.id) ? (
+                      <img
+                        src={ch.tvgLogo}
+                        alt={ch.name}
+                        onError={() => setBrokenLogos((prev) => new Set(prev).add(ch.id))}
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <Tv className="h-5 w-5 text-muted-foreground" />
                     )}

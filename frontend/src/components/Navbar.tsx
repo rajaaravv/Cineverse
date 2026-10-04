@@ -51,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               <span>Live Hub</span>
             </div>
-            <h2 className="text-sm font-semibold text-foreground tracking-tight">
+            <h2 className="text-sm font-semibold text-foreground tracking-tight truncate max-w-[90px] sm:max-w-[180px]">
               {displayName}
             </h2>
           </div>

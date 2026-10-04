@@ -11,7 +11,7 @@ interface ChannelCardProps {
   aspectRatio?: 'poster' | 'video';
 }
 
-export const ChannelCard: React.FC<ChannelCardProps> = ({
+export const ChannelCard: React.FC<ChannelCardProps> = React.memo(({
   channel,
   queueContext,
   onFavoriteChange,
@@ -19,7 +19,6 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
 }) => {
   const { playChannel, currentChannel, toggleFavoriteState } = usePlayer();
   const [isFavorite, setIsFavorite] = useState<boolean>(channel.favorite);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
   const [imgError, setImgError] = useState<boolean>(false);
 
   const isCurrentlyPlaying = currentChannel?.id === channel.id;
@@ -50,8 +49,6 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
   return (
     <div
       onClick={handleCardClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-lg border bg-card transition-all duration-200 hover:-translate-y-0.5 font-sans ${
         isCurrentlyPlaying
           ? 'border-primary ring-1 ring-ring shadow-sm'
@@ -71,6 +68,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
             onError={() => setImgError(true)}
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center bg-muted p-4 text-center">
@@ -81,11 +79,11 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
         )}
 
         {/* Ambient Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none" />
 
         {/* Top Badges: Category & Favorite */}
         <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between z-10">
-          <span className="rounded-md bg-background/80 backdrop-blur-md px-2 py-0.5 text-[10px] font-mono font-medium uppercase tracking-wider text-muted-foreground border border-border shadow-sm">
+          <span className="rounded-md bg-background/80 backdrop-blur-md px-2 py-0.5 text-[10px] font-mono font-medium uppercase tracking-wider text-muted-foreground border border-border shadow-sm truncate max-w-[65%]">
             {channel.groupTitle || 'Live'}
           </span>
 
@@ -102,10 +100,12 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
           </button>
         </div>
 
-        {/* Center Hover Play Button */}
+        {/* Center Hover Play Button (Pure CSS GPU-accelerated) */}
         <div
-          className={`absolute inset-0 flex items-center justify-center transition duration-200 ${
-            isHovered || isCurrentlyPlaying ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-200 pointer-events-none ${
+            isCurrentlyPlaying
+              ? 'opacity-100 scale-100'
+              : 'opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100'
           }`}
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
@@ -114,7 +114,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
         </div>
 
         {/* Bottom Details Overlay */}
-        <div className="absolute bottom-2.5 inset-x-2.5 z-10">
+        <div className="absolute bottom-2.5 inset-x-2.5 z-10 pointer-events-none">
           <h3 className="truncate text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition" title={channel.name}>
             {channel.name}
           </h3>
@@ -135,4 +135,4 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
       </div>
     </div>
   );
-};
+});

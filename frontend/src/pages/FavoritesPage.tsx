@@ -26,11 +26,11 @@ export const FavoritesPage: React.FC = () => {
     loadFavorites();
   }, []);
 
-  const handleFavoriteChange = (channelId: number, isFav: boolean) => {
+  const handleFavoriteChange = React.useCallback((channelId: number, isFav: boolean) => {
     if (!isFav) {
       setFavorites((prev) => prev.filter((f) => f.channelId !== channelId));
     }
-  };
+  }, []);
 
   const channels: Channel[] = favorites.map((fav) => ({
     id: fav.channelId,

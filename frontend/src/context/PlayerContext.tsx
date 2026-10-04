@@ -56,7 +56,7 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const playChannel = (channel: Channel, queue?: Channel[]) => {
+  const playChannel = React.useCallback((channel: Channel, queue?: Channel[]) => {
     setCurrentChannel(channel);
     if (!isPlayerOpen) {
       window.history.pushState({ cineversePlayer: true }, '', window.location.href);
@@ -73,9 +73,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     historyApi.record(channel.id, channel).catch((err) => {
       console.warn('Failed to record history', err);
     });
-  };
+  }, [isPlayerOpen]);
 
-  const playNext = () => {
+  const playNext = React.useCallback(() => {
     if (!currentChannel || channelQueue.length === 0) return;
     const currentIndex = channelQueue.findIndex((c) => c.id === currentChannel.id);
     if (currentIndex !== -1 && currentIndex < channelQueue.length - 1) {
@@ -84,9 +84,9 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // Loop to first channel
       playChannel(channelQueue[0], channelQueue);
     }
-  };
+  }, [currentChannel, channelQueue, playChannel]);
 
-  const playPrevious = () => {
+  const playPrevious = React.useCallback(() => {
     if (!currentChannel || channelQueue.length === 0) return;
     const currentIndex = channelQueue.findIndex((c) => c.id === currentChannel.id);
     if (currentIndex > 0) {
@@ -95,58 +95,74 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // Loop to last channel
       playChannel(channelQueue[channelQueue.length - 1], channelQueue);
     }
-  };
+  }, [currentChannel, channelQueue, playChannel]);
 
-  const openPlayer = () => {
+  const openPlayer = React.useCallback(() => {
     if (currentChannel) {
       if (!isPlayerOpen) {
         window.history.pushState({ cineversePlayer: true }, '', window.location.href);
       }
       setIsPlayerOpen(true);
     }
-  };
+  }, [currentChannel, isPlayerOpen]);
 
-  const closePlayer = () => {
+  const closePlayer = React.useCallback(() => {
     setIsPlayerOpen(false);
     if (!isClosingFromPopstate.current && window.history.state?.cineversePlayer) {
       window.history.back();
     }
-  };
+  }, []);
 
-  const clearCurrentChannel = () => {
+  const clearCurrentChannel = React.useCallback(() => {
     setCurrentChannel(null);
     closePlayer();
     try {
       localStorage.removeItem('cineverse_last_channel');
     } catch {}
-  };
+  }, [closePlayer]);
 
-  const toggleFavoriteState = (channelId: number, isFav: boolean) => {
-    if (currentChannel && currentChannel.id === channelId) {
-      const updated = { ...currentChannel, favorite: isFav };
-      setCurrentChannel(updated);
-      localStorage.setItem('cineverse_last_channel', JSON.stringify(updated));
-    }
+  const toggleFavoriteState = React.useCallback((channelId: number, isFav: boolean) => {
+    setCurrentChannel((prev) => {
+      if (prev && prev.id === channelId) {
+        const updated = { ...prev, favorite: isFav };
+        try {
+          localStorage.setItem('cineverse_last_channel', JSON.stringify(updated));
+        } catch {}
+        return updated;
+      }
+      return prev;
+    });
     setChannelQueue((prev) =>
       prev.map((c) => (c.id === channelId ? { ...c, favorite: isFav } : c))
     );
-  };
+  }, []);
+
+  const value = React.useMemo(() => ({
+    currentChannel,
+    channelQueue,
+    playChannel,
+    playNext,
+    playPrevious,
+    isPlayerOpen,
+    openPlayer,
+    closePlayer,
+    clearCurrentChannel,
+    toggleFavoriteState,
+  }), [
+    currentChannel,
+    channelQueue,
+    playChannel,
+    playNext,
+    playPrevious,
+    isPlayerOpen,
+    openPlayer,
+    closePlayer,
+    clearCurrentChannel,
+    toggleFavoriteState,
+  ]);
 
   return (
-    <PlayerContext.Provider
-      value={{
-        currentChannel,
-        channelQueue,
-        playChannel,
-        playNext,
-        playPrevious,
-        isPlayerOpen,
-        openPlayer,
-        closePlayer,
-        clearCurrentChannel,
-        toggleFavoriteState,
-      }}
-    >
+    <PlayerContext.Provider value={value}>
       {children}
     </PlayerContext.Provider>
   );
