@@ -71,7 +71,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans">
       <div className="fixed inset-0 bg-background/80 backdrop-blur-xs" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg rounded-lg bg-card p-6 sm:p-7 shadow-sm border border-border z-10 text-card-foreground">
+      <div className="relative w-full max-w-lg rounded-lg bg-card p-5 sm:p-7 shadow-sm border border-border z-10 text-card-foreground max-h-[90vh] overflow-y-auto no-scrollbar">
         <div className="flex items-center justify-between pb-4 border-b border-border">
           <div>
             <h2 className="text-base font-bold text-card-foreground">Import M3U Playlist</h2>

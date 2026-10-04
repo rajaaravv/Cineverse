@@ -63,10 +63,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
   const safeResults = Array.isArray(results) ? results : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-16 sm:pt-24 animate-fade-in font-sans">
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-3 pt-6 sm:p-4 sm:pt-24 animate-fade-in font-sans">
       <div className="fixed inset-0 bg-background/80 backdrop-blur-md" onClick={onClose} />
 
-      <div className="relative w-full max-w-2xl rounded-lg bg-popover border border-border shadow-sm z-10 overflow-hidden flex flex-col max-h-[80vh] text-popover-foreground">
+      <div className="relative w-full max-w-2xl rounded-lg bg-popover border border-border shadow-sm z-10 overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[80vh] text-popover-foreground">
         {/* Search Input Bar */}
         <div className="p-4 border-b border-border flex items-center gap-3 bg-background">
           <Search className="h-5 w-5 text-muted-foreground shrink-0" />
