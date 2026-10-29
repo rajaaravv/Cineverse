@@ -250,22 +250,54 @@ function stopPlayer() {
   if (msg) msg.textContent = '';
 }
 
-// ---------- navigation ----------
-function go(p, isPlaying = false) {
+// ---------- navigation & browser history ----------
+let previousPage = 'channels';
+
+function go(p, isPlaying = false, pushHistory = true) {
+  const currentActive = document.querySelector('.page.on');
+  const currentPageId = currentActive ? currentActive.id.replace('p-', '') : 'home';
+  if (currentPageId !== 'watch' && currentPageId !== p) {
+    previousPage = currentPageId;
+  }
+
   if (p !== 'watch') {
     stopPlayer();
   }
+
   document.querySelectorAll('.page').forEach(x => x.classList.toggle('on', x.id === 'p-' + p));
   document.querySelectorAll('.menu button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
   if (p === 'favs') renderFavs();
   if (p === 'playlists') renderPlaylistsPage();
   if (p === 'home') renderHomePlaylistChips();
+
+  // Push history state so the Browser Back button navigates inside Cineverse
+  if (pushHistory) {
+    const curHash = location.hash.replace('#', '');
+    if (curHash !== p) {
+      history.pushState({ page: p }, '', '#' + p);
+    }
+  }
+
   if (p === 'watch' && cur && !hls && !isPlaying) {
     play(cur);
     return;
   }
   window.scrollTo(0, 0);
 }
+
+function goBack() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    go(previousPage || 'channels');
+  }
+}
+
+// Handle Browser Back and Forward buttons without exiting the site
+window.addEventListener('popstate', event => {
+  const target = (event.state && event.state.page) || location.hash.replace('#', '') || 'home';
+  go(target, false, false);
+});
 
 // ---------- load playlist from Java backend ----------
 function preset(u) {
@@ -366,7 +398,11 @@ function getInitials(name) {
   return clean.slice(0, 3).toUpperCase();
 }
 
-// ---------- channel cards ----------
+// ---------- channel cards & icons ----------
+const HEART_OUTLINE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+const HEART_FILL = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+
+function heartIcon(c) { return isFav(c) ? HEART_FILL : HEART_OUTLINE; }
 function heartText(c) { return isFav(c) ? '\u2665' : '\u2661'; }
 
 function updateActiveCards() {
@@ -397,6 +433,7 @@ function makeCard(c) {
     img.src = c.logo;
     img.alt = c.name;
     img.loading = 'lazy';
+    img.draggable = false;
     img.referrerPolicy = 'no-referrer';
     img.onerror = () => {
       img.remove();
@@ -425,15 +462,19 @@ function makeCard(c) {
 
   // Heart Favorite Button
   const h = document.createElement('button');
+  h.type = 'button';
   h.className = 'heart' + (isFav(c) ? ' on' : '');
-  h.innerHTML = isFav(c) ? '&#9829;' : '&#9825;';
+  h.innerHTML = heartIcon(c);
   h.title = isFav(c) ? 'Remove from My List' : 'Add to My List';
+  h.setAttribute('aria-label', h.title);
   h.onclick = ev => {
     ev.stopPropagation();
     toggleFav(c);
-    h.className = 'heart' + (isFav(c) ? ' on' : '');
-    h.innerHTML = isFav(c) ? '&#9829;' : '&#9825;';
-    h.title = isFav(c) ? 'Remove from My List' : 'Add to My List';
+    const active = isFav(c);
+    h.className = 'heart' + (active ? ' on' : '');
+    h.innerHTML = heartIcon(c);
+    h.title = active ? 'Remove from My List' : 'Add to My List';
+    h.setAttribute('aria-label', h.title);
   };
 
   d.append(lg, nm, gp, h);
@@ -688,4 +729,11 @@ renderPlaylistsPage();
 const restored = restoreSavedPlaylist();
 if (!restored) {
   stats();
+}
+
+// Setup initial history state & route
+const initialPage = location.hash.replace('#', '') || 'home';
+history.replaceState({ page: initialPage }, '', '#' + initialPage);
+if (initialPage !== 'home') {
+  go(initialPage, false, false);
 }
