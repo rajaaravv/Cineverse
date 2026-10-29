@@ -120,15 +120,12 @@
           </div>
           <div class="stream-progress-meta">
             <span class="stream-time" id="streamTimeCurrent">0:00</span>
-            <button type="button" class="stream-live-btn" id="streamLiveBtn" onclick="jumpToLive()" title="Sync to real-time live stream">
-              <span class="live-dot"></span> LIVE
-            </button>
-            <span class="stream-time" id="streamTimeDuration">LIVE</span>
+            <span class="stream-time" id="streamTimeDuration"></span>
           </div>
         </div>
         <div class="info">
           <div class="now-meta">
-            <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+            <span class="live-badge" id="playerLiveBadge" onclick="jumpToLive()" role="button" tabindex="0" title="Click to sync to real-time Live stream"><span class="live-dot"></span> LIVE</span>
             <h3 id="now">Select a channel to start watching</h3>
           </div>
           <div class="player-controls">
