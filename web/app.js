@@ -245,6 +245,7 @@ function stopPlayer() {
     try { hls.destroy(); } catch (_) {}
     hls = null;
   }
+  hidePlayerSpinner();
   const msg = $('msg');
   if (msg) msg.textContent = '';
 }
@@ -353,25 +354,88 @@ function buildGroups() {
   });
 }
 
+// ---------- channel card initials generator ----------
+function getInitials(name) {
+  if (!name) return 'TV';
+  const clean = name.replace(/[^a-zA-Z0-9 ]/g, '').trim();
+  if (!clean) return 'TV';
+  const parts = clean.split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return clean.slice(0, 3).toUpperCase();
+}
+
 // ---------- channel cards ----------
 function heartText(c) { return isFav(c) ? '\u2665' : '\u2661'; }
 
+function updateActiveCards() {
+  document.querySelectorAll('.card').forEach(card => {
+    const isPlaying = cur && card.dataset.url === cur.url;
+    card.classList.toggle('playing', isPlaying);
+    const overlay = card.querySelector('.card-play-overlay');
+    if (overlay) {
+      overlay.innerHTML = isPlaying
+        ? '<span class="now-playing-badge"><span class="live-dot" style="width:6px;height:6px;"></span> PLAYING</span>'
+        : '<span class="play-icon-badge">&#9654;</span>';
+    }
+  });
+}
+
 function makeCard(c) {
-  const d = document.createElement('div'); d.className = 'card';
-  const lg = document.createElement('div'); lg.className = 'lg';
+  const d = document.createElement('div');
+  const isPlaying = cur && cur.url === c.url;
+  d.className = 'card' + (isPlaying ? ' playing' : '');
+  d.dataset.url = c.url;
+  d.title = c.name + (c.group ? ' • ' + c.group : '');
+
+  // Logo with fallback
+  const lg = document.createElement('div');
+  lg.className = 'lg';
   if (c.logo) {
-    const img = document.createElement('img'); img.src = c.logo; img.loading = 'lazy';
-    img.onerror = () => { img.remove(); lg.textContent = TV; };
+    const img = document.createElement('img');
+    img.src = c.logo;
+    img.alt = c.name;
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.onerror = () => {
+      img.remove();
+      lg.innerHTML = `<div class="card-fallback-logo"><span>${escapeHtml(getInitials(c.name))}</span></div>`;
+    };
     lg.appendChild(img);
-  } else lg.textContent = TV;
-  const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = c.name;
-  const gp = document.createElement('div'); gp.className = 'gp'; gp.textContent = c.group;
+  } else {
+    lg.innerHTML = `<div class="card-fallback-logo"><span>${escapeHtml(getInitials(c.name))}</span></div>`;
+  }
+
+  // Play / Playing overlay on hover
+  const playOverlay = document.createElement('div');
+  playOverlay.className = 'card-play-overlay';
+  playOverlay.innerHTML = isPlaying
+    ? '<span class="now-playing-badge"><span class="live-dot" style="width:6px;height:6px;"></span> PLAYING</span>'
+    : '<span class="play-icon-badge">&#9654;</span>';
+  lg.appendChild(playOverlay);
+
+  // Meta
+  const nm = document.createElement('div');
+  nm.className = 'nm';
+  nm.textContent = c.name;
+  const gp = document.createElement('div');
+  gp.className = 'gp';
+  gp.textContent = c.group || 'General';
+
+  // Heart Favorite Button
   const h = document.createElement('button');
-  h.className = 'heart' + (isFav(c) ? ' on' : ''); h.textContent = heartText(c);
+  h.className = 'heart' + (isFav(c) ? ' on' : '');
+  h.innerHTML = isFav(c) ? '&#9829;' : '&#9825;';
+  h.title = isFav(c) ? 'Remove from My List' : 'Add to My List';
   h.onclick = ev => {
-    ev.stopPropagation(); toggleFav(c);
-    h.className = 'heart' + (isFav(c) ? ' on' : ''); h.textContent = heartText(c);
+    ev.stopPropagation();
+    toggleFav(c);
+    h.className = 'heart' + (isFav(c) ? ' on' : '');
+    h.innerHTML = isFav(c) ? '&#9829;' : '&#9825;';
+    h.title = isFav(c) ? 'Remove from My List' : 'Add to My List';
   };
+
   d.append(lg, nm, gp, h);
   d.onclick = () => play(c);
   return d;
@@ -432,17 +496,45 @@ function prevChannel() {
   play(list[idx]);
 }
 
+// ---------- player spinner & status overlay ----------
+function showPlayerSpinner(text = 'Connecting to live stream...') {
+  const overlay = $('videoOverlay');
+  const txt = $('playerSpinnerText');
+  if (txt) txt.textContent = text;
+  if (overlay) overlay.classList.add('on');
+}
+
+function hidePlayerSpinner() {
+  const overlay = $('videoOverlay');
+  if (overlay) overlay.classList.remove('on');
+}
+
 // ---------- player (with auto fallback & robust format handling) ----------
 function play(c) {
   cur = c;
   go('watch', true);
   $('now').textContent = c.name;
-  $('msg').textContent = '';
+  $('msg').innerHTML = '';
   updateFavBtn();
+  updateActiveCards();
 
   const v = $('video');
   const directUrl = c.url;
   const proxyUrl = '/proxy?url=' + encodeURIComponent(c.url);
+
+  // Attach video playback state listeners
+  v.onplaying = () => {
+    hidePlayerSpinner();
+    $('msg').innerHTML = '';
+  };
+  v.onwaiting = () => {
+    showPlayerSpinner('Buffering stream...');
+  };
+  v.oncanplay = () => {
+    hidePlayerSpinner();
+  };
+
+  let retryCount = 0;
 
   function loadStream(streamUrl, isDirectFallback = false) {
     if (hls) {
@@ -450,13 +542,16 @@ function play(c) {
       hls = null;
     }
 
+    showPlayerSpinner(isDirectFallback ? 'Connecting directly to stream...' : 'Connecting to live stream...');
+
     v.onerror = () => {
       if (!isDirectFallback) {
         console.warn('Proxy stream error, falling back to direct stream:', directUrl);
-        $('msg').textContent = 'Proxy stream failed, trying direct stream...';
+        $('msg').innerHTML = '<span>Relay stream slow, trying direct stream...</span>';
         loadStream(directUrl, true);
       } else {
-        $('msg').textContent = 'This stream is offline or temporarily unavailable. Try another channel.';
+        hidePlayerSpinner();
+        $('msg').innerHTML = '<span>This stream is offline or blocked.</span> <button class="btn ghost btn-sm" onclick="play(cur)" style="margin-left:8px;">&#8635; Retry</button>';
       }
     };
 
@@ -477,12 +572,12 @@ function play(c) {
       hls.attachMedia(v);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        $('msg').textContent = '';
+        $('msg').innerHTML = '';
         v.play().catch(err => {
           if (err.name === 'NotAllowedError') {
             v.muted = true;
             v.play().then(() => {
-              $('msg').textContent = 'Autoplayed muted due to browser policy. Click video to unmute.';
+              $('msg').innerHTML = '<span>Autoplay muted due to browser policy. Click video to unmute.</span>';
             }).catch(() => {});
           }
         });
@@ -492,28 +587,35 @@ function play(c) {
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              if (data.response && (data.response.code === 502 || data.response.code === 404 || data.response.code === 403)) {
+              retryCount++;
+              if (retryCount <= 2) {
+                showPlayerSpinner(`Reconnecting stream (${retryCount}/2)...`);
+                hls.startLoad();
+              } else {
                 if (!isDirectFallback) {
-                  $('msg').textContent = 'Proxy unavailable, switching to direct stream...';
+                  $('msg').innerHTML = '<span>Relay unavailable, switching to direct stream...</span>';
                   loadStream(directUrl, true);
-                  return;
+                } else {
+                  hidePlayerSpinner();
+                  $('msg').innerHTML = '<span>Stream connection timed out.</span> <button class="btn ghost btn-sm" onclick="play(cur)" style="margin-left:8px;">&#8635; Retry</button>';
                 }
               }
-              hls.startLoad();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
               hls.recoverMediaError();
               break;
             default:
               if (!isDirectFallback) {
-                $('msg').textContent = 'Proxy failed, switching to direct stream...';
+                $('msg').innerHTML = '<span>Switching to direct stream...</span>';
                 loadStream(directUrl, true);
               } else {
+                // If HLS failed, attempt direct native video (handles MP4/WebM/direct formats)
                 hls.destroy();
                 hls = null;
                 v.src = streamUrl;
                 v.play().catch(() => {
-                  $('msg').textContent = 'Stream offline or blocked. Try another channel.';
+                  hidePlayerSpinner();
+                  $('msg').innerHTML = '<span>Stream offline or blocked. Try another channel.</span> <button class="btn ghost btn-sm" onclick="play(cur)" style="margin-left:8px;">&#8635; Retry</button>';
                 });
               }
               break;

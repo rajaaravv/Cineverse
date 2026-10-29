@@ -101,9 +101,18 @@
   <section class="page" id="p-watch">
     <div class="watch">
       <div class="player-box">
-        <video id="video" controls autoplay playsinline></video>
+        <div class="video-container" id="videoContainer">
+          <video id="video" controls autoplay playsinline></video>
+          <div class="video-overlay" id="videoOverlay">
+            <div class="player-spinner"></div>
+            <span id="playerSpinnerText">Connecting to live stream...</span>
+          </div>
+        </div>
         <div class="info">
-          <h3 id="now">Select a channel to start watching</h3>
+          <div class="now-meta">
+            <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+            <h3 id="now">Select a channel to start watching</h3>
+          </div>
           <div class="player-controls">
             <button class="btn ghost nav-btn" id="prevBtn" onclick="prevChannel()" title="Previous channel">&#9664; Prev</button>
             <button class="btn ghost nav-btn" id="nextBtn" onclick="nextChannel()" title="Next channel">Next &#9654;</button>
