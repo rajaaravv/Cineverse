@@ -248,17 +248,6 @@ function stopPlayer() {
   hidePlayerSpinner();
   const msg = $('msg');
   if (msg) msg.textContent = '';
-  // Reset progress bar line
-  const fill = $('streamProgressFill');
-  if (fill) fill.style.width = '0%';
-  const thumb = $('streamProgressThumb');
-  if (thumb) thumb.style.left = '0%';
-  const buf = $('streamProgressBuffer');
-  if (buf) buf.style.width = '0%';
-  const curTime = $('streamTimeCurrent');
-  if (curTime) curTime.textContent = '0:00';
-  const durTime = $('streamTimeDuration');
-  if (durTime) durTime.textContent = '';
 }
 
 // ---------- navigation & browser history ----------
@@ -719,71 +708,12 @@ function updateFsBtn() {
   document.addEventListener(ev, updateFsBtn);
 });
 
-// ---------- player progress bar (The Line) & live sync ----------
-function formatTime(sec) {
-  if (!sec || isNaN(sec) || !isFinite(sec) || sec < 0) return '0:00';
-  const s = Math.floor(sec);
-  const m = Math.floor(s / 60);
-  const h = Math.floor(m / 60);
-  const remM = m % 60;
-  const remS = s % 60;
-  const pad = n => (n < 10 ? '0' + n : n);
-  if (h > 0) {
-    return h + ':' + pad(remM) + ':' + pad(remS);
-  }
-  return remM + ':' + pad(remS);
-}
-
+// ---------- live stream helpers & seek protection ----------
 function isLiveStream(v) {
   if (!v) return true;
   if (!v.duration || !isFinite(v.duration)) return true;
   if (hls && hls.currentLevel >= 0 && hls.levels[hls.currentLevel]?.details?.live) return true;
   return false;
-}
-
-function updateProgressBar() {
-  const v = $('video');
-  const fill = $('streamProgressFill');
-  const buf = $('streamProgressBuffer');
-  const thumb = $('streamProgressThumb');
-  const curTime = $('streamTimeCurrent');
-  const durTime = $('streamTimeDuration');
-  const liveBadge = $('playerLiveBadge');
-  if (!v || !fill) return;
-
-  const live = isLiveStream(v);
-
-  // Buffer line
-  if (v.buffered && v.buffered.length > 0) {
-    const end = v.buffered.end(v.buffered.length - 1);
-    if (!live && v.duration && isFinite(v.duration)) {
-      const bufPct = Math.min(100, Math.max(0, (end / v.duration) * 100));
-      if (buf) buf.style.width = bufPct + '%';
-    } else {
-      if (buf) buf.style.width = '100%';
-    }
-  }
-
-  if (live) {
-    if (curTime) curTime.textContent = formatTime(v.currentTime);
-    if (durTime) durTime.textContent = '';
-    if (liveBadge) {
-      liveBadge.innerHTML = '<span class="live-dot"></span> LIVE';
-      liveBadge.title = 'Click to sync to real-time Live stream';
-    }
-    fill.style.width = '100%';
-    if (thumb) thumb.style.left = '100%';
-  } else {
-    const pct = v.duration ? Math.min(100, Math.max(0, (v.currentTime / v.duration) * 100)) : 0;
-    fill.style.width = pct + '%';
-    if (thumb) thumb.style.left = pct + '%';
-    if (curTime) curTime.textContent = formatTime(v.currentTime);
-    if (durTime) durTime.textContent = formatTime(v.duration);
-    if (liveBadge) {
-      liveBadge.innerHTML = '&#9654; VOD';
-      liveBadge.title = 'VOD playback';
-    }
-  }
 }
 
 function jumpToLive() {
@@ -797,87 +727,24 @@ function jumpToLive() {
     v.currentTime = v.buffered.end(v.buffered.length - 1);
   }
   if (v.paused) v.play().catch(() => {});
-  updateProgressBar();
 }
 
-function initProgressBar() {
-  const track = $('streamProgressTrack');
-  const bar = $('streamProgressBar');
-  const v = $('video');
-  if (!track || !v) return;
-
-  let isDragging = false;
-
-  const seek = e => {
-    const rect = track.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-
-    if (isLiveStream(v)) {
-      if (ratio > 0.85) {
-        jumpToLive();
-      } else if (v.seekable && v.seekable.length > 0) {
-        const start = v.seekable.start(0);
-        const end = v.seekable.end(v.seekable.length - 1);
-        v.currentTime = start + (end - start) * ratio;
-      }
-    } else if (v.duration && isFinite(v.duration)) {
-      v.currentTime = v.duration * ratio;
-    }
-    updateProgressBar();
-  };
-
-  track.addEventListener('mousedown', e => {
-    isDragging = true;
-    if (bar) bar.classList.add('seeking');
-    seek(e);
-  });
-  window.addEventListener('mousemove', e => {
-    if (isDragging) seek(e);
-  });
-  window.addEventListener('mouseup', () => {
-    if (isDragging) {
-      isDragging = false;
-      if (bar) bar.classList.remove('seeking');
-    }
-  });
-
-  // Touch support for phones
-  track.addEventListener('touchstart', e => {
-    isDragging = true;
-    if (bar) bar.classList.add('seeking');
-    if (e.touches && e.touches[0]) seek(e.touches[0]);
-  }, { passive: true });
-  window.addEventListener('touchmove', e => {
-    if (isDragging && e.touches && e.touches[0]) seek(e.touches[0]);
-  }, { passive: true });
-  window.addEventListener('touchend', () => {
-    if (isDragging) {
-      isDragging = false;
-      if (bar) bar.classList.remove('seeking');
-    }
-  });
-
-  // Video playback & seek events
-  v.addEventListener('timeupdate', updateProgressBar);
-  v.addEventListener('progress', updateProgressBar);
-  v.addEventListener('durationchange', updateProgressBar);
-  v.addEventListener('loadedmetadata', updateProgressBar);
-  v.addEventListener('seeking', () => {
-    // Safe seek guard on live streams: prevent seeking to 0 which crashes HLS
-    if (isLiveStream(v)) {
-      if (v.seekable && v.seekable.length > 0) {
-        const start = v.seekable.start(0);
-        const end = v.seekable.end(v.seekable.length - 1);
-        if (v.currentTime < start) {
-          v.currentTime = start;
-        } else if (v.currentTime > end) {
-          v.currentTime = end;
+// Attach seek guard on video element so live streams never crash when scrubbing
+const vPlayer = $('video');
+if (vPlayer) {
+  vPlayer.addEventListener('seeking', () => {
+    if (isLiveStream(vPlayer)) {
+      if (vPlayer.seekable && vPlayer.seekable.length > 0) {
+        const start = vPlayer.seekable.start(0);
+        const end = vPlayer.seekable.end(vPlayer.seekable.length - 1);
+        if (vPlayer.currentTime < start) {
+          vPlayer.currentTime = start;
+        } else if (vPlayer.currentTime > end) {
+          vPlayer.currentTime = end;
         }
       }
     }
-    updateProgressBar();
   });
-  v.addEventListener('seeked', updateProgressBar);
 }
 
 // ---------- keyboard shortcuts ----------

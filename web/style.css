@@ -770,82 +770,6 @@ h2 {
   accent-color: var(--primary);
 }
 
-/* ----- Red Vivid Stream Progress Bar (The Line) ----- */
-.stream-progress-bar {
-  margin: 14px 0 6px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.stream-progress-track {
-  position: relative;
-  width: 100%;
-  height: 6px;
-  background: var(--card2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  cursor: pointer;
-  overflow: visible;
-  transition: height .15s ease;
-}
-.stream-progress-track:hover {
-  height: 8px;
-}
-.stream-progress-buffer {
-  position: absolute;
-  top: 0; left: 0; bottom: 0;
-  background: rgba(255, 255, 255, 0.14);
-  width: 0%;
-  border-radius: var(--radius);
-  pointer-events: none;
-  transition: width .2s ease;
-}
-.stream-progress-fill {
-  position: absolute;
-  top: 0; left: 0; bottom: 0;
-  background: var(--primary);
-  width: 0%;
-  border-radius: var(--radius);
-  pointer-events: none;
-  box-shadow: 0 0 10px rgba(209, 2, 2, 0.6);
-  transition: width .1s linear;
-}
-.stream-progress-thumb {
-  position: absolute;
-  top: 50%;
-  left: 0%;
-  width: 12px;
-  height: 12px;
-  background: #000000;
-  border: 2px solid var(--primary);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  box-shadow: 0 0 8px rgba(209, 2, 2, 0.8);
-  opacity: 0;
-  transition: opacity .15s ease, transform .15s ease;
-}
-.stream-progress-track:hover .stream-progress-thumb,
-.stream-progress-bar.seeking .stream-progress-thumb {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1.15);
-}
-.stream-progress-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--mut);
-  padding: 0 2px;
-}
-.stream-time {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.5px;
-}
 .live-badge {
   display: inline-flex;
   align-items: center;
@@ -1357,18 +1281,6 @@ html, body {
   /* Watch Page */
   .player-box {
     padding: 8px;
-  }
-  .stream-progress-bar {
-    margin: 10px 0 4px;
-  }
-  .stream-progress-track {
-    height: 5px;
-  }
-  .stream-progress-track:hover {
-    height: 7px;
-  }
-  .stream-progress-meta {
-    font-size: 11px;
   }
   .info {
     flex-direction: column;
