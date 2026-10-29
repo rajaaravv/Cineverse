@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cineverse - Live TV, Your Universe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="brand" onclick="go('home')" role="button" tabindex="0" title="Go to Home">
+      <div class="brand-logo">
+        <svg class="brand-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="cGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ff3333"/>
+              <stop offset="100%" stop-color="#b80000"/>
+            </linearGradient>
+            <linearGradient id="pGrad" x1="13" y1="11" x2="26" y2="25" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#ffe6e6"/>
+            </linearGradient>
+            <filter id="cShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="#d10202" flood-opacity="0.5"/>
+            </filter>
+          </defs>
+          <!-- Frame Background -->
+          <rect x="0.5" y="0.5" width="35" height="35" fill="#0d0d10" stroke="#222226"/>
+          <!-- Stylized C Monogram -->
+          <path d="M25 8H11C8 8 6 10 6 13V23C6 26 8 28 11 28H25" stroke="url(#cGrad)" stroke-width="3.5" stroke-linecap="square" filter="url(#cShadow)"/>
+          <!-- Cinema Notches -->
+          <rect x="23" y="6" width="3" height="4" fill="#ff3333"/>
+          <rect x="23" y="26" width="3" height="4" fill="#ff3333"/>
+          <!-- Embedded Play Arrow -->
+          <path d="M14 11.5L25 18L14 24.5V11.5Z" fill="url(#pGrad)"/>
+        </svg>
+      </div>
+      <div class="brand-text-wrap">
+        <div class="brand-text"><span class="brand-cine">CINE</span><span class="brand-verse">VERSE</span></div>
+        <span class="brand-tag">LIVE STREAM</span>
+      </div>
+    </div>
+    <div class="nav-right">
+      <ul class="menu">
+        <li><button data-p="home" class="on" onclick="go('home')">Home</button></li>
+        <li><button data-p="channels" onclick="go('channels')">Channels</button></li>
+        <li><button data-p="watch" onclick="go('watch')">Watch</button></li>
+        <li><button data-p="favs" onclick="go('favs')">My List</button></li>
+        <li><button data-p="playlists" onclick="go('playlists')">Playlists</button></li>
+        <li><button data-p="about" onclick="go('about')">About</button></li>
+      </ul>
+      <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme">&#9728;</button>
+    </div>
+  </nav>
+
+  <!-- HOME -->
+  <section class="page on" id="p-home">
+    <div class="hero">
+      <p class="tag">LIVE TV &middot; ANYWHERE &middot; ANYTIME</p>
+      <h1>Your entire <span>universe</span> of channels.<br>One place.</h1>
+      <p class="sub">Paste any M3U / M3U8 playlist link. Cineverse extracts every channel and plays it instantly.</p>
+
+      <div class="loader">
+        <input type="text" id="plNameInput" class="name-input" placeholder="Playlist Name (optional)">
+        <input type="text" id="url" placeholder="Paste playlist link here (https://...m3u)">
+        <button class="btn" id="loadBtn" onclick="load()">Load Channels</button>
+      </div>
+
+      <div class="saved-playlists-bar">
+        <span class="bar-title">&#128225; Saved Playlists:</span>
+        <div class="chips" id="homePlaylistChips"></div>
+        <button class="btn ghost btn-sm manage-btn" onclick="go('playlists')">&#9881; Manage</button>
+      </div>
+      <div id="status"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="s1">0</b><span>Channels</span></div>
+      <div class="stat"><b id="s2">0</b><span>Categories</span></div>
+      <div class="stat"><b id="s3">0</b><span>In My List</span></div>
+      <div class="stat" onclick="go('playlists')" style="cursor: pointer;" title="Manage saved playlists"><b id="s4">0</b><span>Playlists</span></div>
+    </div>
+  </section>
+
+  <!-- CHANNELS -->
+  <section class="page" id="p-channels">
+    <h2>All Channels</h2>
+    <input type="text" id="search" class="search" placeholder="Search channels..." oninput="limit=120;renderGrid()">
+    <div class="groups" id="groups"></div>
+    <div class="grid" id="grid"></div>
+    <button class="btn ghost more" id="more" onclick="limit+=120;renderGrid()">Show more</button>
+  </section>
+
+  <!-- WATCH -->
+  <section class="page" id="p-watch">
+    <div class="watch">
+      <div class="player-box">
+        <video id="video" controls autoplay playsinline></video>
+        <div class="info">
+          <h3 id="now">Select a channel to start watching</h3>
+          <div class="player-controls">
+            <button class="btn ghost nav-btn" id="prevBtn" onclick="prevChannel()" title="Previous channel">&#9664; Prev</button>
+            <button class="btn ghost nav-btn" id="nextBtn" onclick="nextChannel()" title="Next channel">Next &#9654;</button>
+            <button class="btn ghost" id="favBtn" onclick="toggleFav(cur)">&#9825; My List</button>
+            <button class="btn ghost" id="fsBtn" onclick="toggleFullscreen()" title="Toggle fullscreen">&#x26F6; Fullscreen</button>
+          </div>
+          <input type="checkbox" id="useProxy" checked hidden>
+        </div>
+        <div id="msg"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAVORITES -->
+  <section class="page" id="p-favs">
+    <h2>My List</h2>
+    <div class="grid" id="favGrid"></div>
+  </section>
+
+  <!-- PLAYLISTS -->
+  <section class="page" id="p-playlists">
+    <h2>Saved Playlists</h2>
+    <p class="sub" style="margin-bottom: 24px;">Store multiple M3U / M3U8 playlist links in your browser. Switch between them anytime with a single click.</p>
+
+    <div class="playlist-form-box">
+      <h3>Add New Playlist</h3>
+      <div class="pl-form">
+        <input type="text" id="newPlName" placeholder="Playlist Name (e.g. My Sports TV, UK Live)">
+        <input type="text" id="newPlUrl" placeholder="Playlist URL (https://...m3u / m3u8)">
+        <button class="btn" onclick="addNewPlaylist()">+ Save Playlist</button>
+      </div>
+      <div id="plFormMsg"></div>
+    </div>
+
+    <div class="playlists-grid" id="playlistsGrid"></div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="page about" id="p-about">
+    <h2>About Cineverse</h2>
+    <div class="box">
+      <p><b>Cineverse</b> is an IPTV web application built for a Java PBL. The backend is pure Java (JDK only), the frontend is HTML, CSS and JavaScript.</p>
+    </div>
+    <div class="box">
+      <h4>How it works</h4>
+      <ol>
+        <li>User pastes a playlist link in the browser.</li>
+        <li>Frontend calls <code>/api/channels?url=...</code>.</li>
+        <li>Java <code>HttpClient</code> downloads the M3U file.</li>
+        <li>A regex parser reads each <code>#EXTINF</code> line (name, logo, group) and its stream URL.</li>
+        <li>Channels are sent back as JSON and shown as a searchable grid.</li>
+        <li>On play, <code>/proxy</code> relays the stream through Java (avoids CORS) and rewrites .m3u8 links.</li>
+        <li>hls.js plays the stream in the HTML5 video player.</li>
+      </ol>
+    </div>
+    <div class="box">
+      <h4>Tech stack</h4>
+      <p>Java 17: <code>HttpServer</code>, <code>HttpClient</code>, <code>regex</code>, <code>nio.file</code></p>
+      <p>Frontend: HTML5, CSS3 (grid, flexbox, animations), JavaScript, hls.js</p>
+    </div>
+  </section>
+
+  <footer>&copy; Cineverse &middot; Java PBL Project</footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
