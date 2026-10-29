@@ -92,6 +92,11 @@ flowchart TD
 
 ```text
 iptv/
+├── api/                     # Vercel Serverless Functions
+│   ├── channels.js          # /api/channels M3U fetcher & JSON parser
+│   └── proxy.js             # /proxy stream relay & .m3u8 rewrite
+├── vercel.json              # Vercel deployment rewrites & routing configuration
+├── package.json             # ES module definitions for Vercel
 ├── CineverseServer.java     # Pure Java 17+ HTTP server, M3U parser & CORS proxy
 ├── CineverseServer.class    # Compiled Java bytecode
 ├── README.md                # Project documentation
@@ -103,33 +108,41 @@ iptv/
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Deployment & Running
 
-### Prerequisites
-- **Java Development Kit (JDK) 17** or higher installed. Verify with:
-  ```bash
-  java -version
-  ```
+### Option A: Deploy to Vercel (1-Click & Cloud Ready) ⚡
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/your-username/cineverse-iptv.git
-cd cineverse-iptv
-```
+Cineverse comes pre-configured with Vercel Serverless Functions (`api/channels.js` and `api/proxy.js`) and `vercel.json`.
 
-### 2. Compile & Run
-Compile the standalone server:
-```bash
-javac CineverseServer.java
-```
+1. **Push to GitHub**:
+   ```bash
+   git add .
+   git commit -m "feat: add Vercel serverless functions"
+   git push origin main
+   ```
+2. **Import into Vercel**:
+   - Go to [vercel.com/new](https://vercel.com/new).
+   - Select your `cineverse-iptv` GitHub repository.
+   - Leave all default settings (Framework Preset: **Other**, Root Directory: `./`).
+   - Click **Deploy**.
+3. Your IPTV platform is live instantly with global CDN acceleration and CORS-enabled serverless proxying!
 
-Start Cineverse:
-```bash
-java CineverseServer
-```
+---
 
-### 3. Open in Browser
-Visit **[http://localhost:9090](http://localhost:9090)** in your browser.
+### Option B: Run Locally with Pure Java (Port 9090) ☕
+
+#### Prerequisites
+- **Java Development Kit (JDK) 17** or higher installed (`java -version`).
+
+1. Compile the standalone server:
+   ```bash
+   javac CineverseServer.java
+   ```
+2. Start Cineverse:
+   ```bash
+   java CineverseServer
+   ```
+3. Open **[http://localhost:9090](http://localhost:9090)** in your browser.
 
 ---
 

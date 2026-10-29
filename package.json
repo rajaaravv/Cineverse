@@ -1,0 +1,7 @@
+{
+  "name": "cineverse-iptv",
+  "version": "1.0.0",
+  "description": "Cineverse IPTV streaming platform",
+  "type": "module",
+  "private": true
+}
